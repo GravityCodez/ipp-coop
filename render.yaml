@@ -1,0 +1,14 @@
+# Render Blueprint for the IPP app. Same settings as the live web service "ipp-master"
+# (https://ipp-master.onrender.com). Secrets are set in the Render dashboard, never here.
+services:
+  - type: web
+    name: ipp-master
+    runtime: node
+    region: frankfurt
+    plan: free
+    branch: main
+    buildCommand: npx -y bun@1.4.0 install --frozen-lockfile && NITRO_PRESET=node-server npx -y bun@1.4.0 run build
+    startCommand: node .output/server/index.mjs
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false
