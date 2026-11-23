@@ -149,6 +149,10 @@ describe("model output is checked", () => {
     expect(ok({ answer: "Which dates?", kind: "proposal", sources: [], patch: {} })!.kind).toBe(
       "answer",
     ));
+  it("keeps IDs exact when the model writes typographic hyphens", () =>
+    expect(
+      ok({ answer: "E\u2011JIRA\u201101 is pending.", kind: "answer", sources: ["Evidence"] })!.answer,
+    ).toBe("E-JIRA-01 is pending."));
   it("always uses the fixed handoff text", () =>
     expect(ok({ answer: "It pays well.", kind: "handoff", sources: ["Matching"] })).toMatchObject({
       answer: HANDOFF,
@@ -180,5 +184,6 @@ describe("what reaches the model", () => {
     const p = buildPrompt(facts(), VOCAB);
     expect(p).toContain("You cannot review, verify, approve, submit or place");
     expect(p).toContain("E-JIRA-01");
+    expect(p).toContain("list every step in FACTS.approvals");
   });
 });

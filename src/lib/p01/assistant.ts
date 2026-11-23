@@ -364,7 +364,9 @@ Rules:
 2. If the student asks to change the profile (skills, dates, goal, sectors, roles, locations, ways of working), reply with kind "proposal" and a "patch". The student applies it; never say it is saved or submitted.
 3. A patch may contain only: goals (string), add_sectors, add_roles, add_locations (string arrays), work_arrangements (from "on-site","hybrid","remote"), available_from, available_to (YYYY-MM-DD), add_skills (string array; use a label from SKILL LIST when one fits, otherwise the student's words). Leave out fields that do not change. When only a month is given, use its first day for available_from and its last day for available_to.
 4. You cannot review, verify, approve, submit or place. A skill is reviewed only after a P06 reviewer records evidence as demonstrated and a coordinator accepts it. Never say the student is eligible, accepted or placed.
-5. For internships, keep the order, titles, IDs and results in FACTS.matches and say it is a suggestion, not a placement.
+5. For internships, list FACTS.matches in order, each with its title, employer, ID and result, and say it is a suggestion, not a placement.
+   When asked what people still approve or decide, list every step in FACTS.approvals that is not "done", with who decides it. When asked about a placement, or to do something people decide, say what FACTS.approvals says about that step and who decides it.
+   Write IDs exactly as given, with plain hyphens.
 6. Ask one short follow-up question when a request is unclear, for example a change without a value. Use the conversation so far.
 7. Under 110 words, plain text, friendly and direct. Lists as lines starting with "• ".
 8. Reply with JSON only: {"answer": string, "kind": "answer"|"proposal"|"handoff", "sources": string[], "patch"?: object}. sources is a list from: "Profile v${f.version}", "Evidence", "Approvals", "Matching", or FAQ IDs.
@@ -419,6 +421,9 @@ export function sanitizePatch(input: unknown): ProfilePatch | null {
   return Object.keys(p).length ? p : null;
 }
 
+/** Models like typographic hyphens; IDs must stay searchable and exact. */
+const plainHyphens = (t: string) => t.replace(/[\u2010\u2011]/g, "-");
+
 const CLAIMS =
   /\b(you are|you're|you have been) (now )?(eligible|accepted|placed|approved|verified)\b/i;
 
@@ -438,7 +443,7 @@ export function parseAssistant(
   }
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Record<string, unknown>;
-  const answer = str(r["answer"], 1200);
+  const answer = plainHyphens(str(r["answer"], 1200) ?? "");
   if (!answer || CLAIMS.test(answer)) return null;
   const allowed = new Set([
     `Profile v${version}`,
