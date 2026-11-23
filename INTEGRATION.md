@@ -204,7 +204,7 @@ Added by Team 1 on 24 Nov 2026 (Sprint 3).
 | `/p01/profile` (footer link, Student view) | P01 profile and interests: draft, submit, clarification, revision as a new version, skills with evidence status, matching preview (P05 engine on live listings), version history. The profile assistant explains the profile and proposes changes to a draft. |
 | `/p01/coordinator` (footer link, Admin view) | Review queue with changed fields, request clarification, mark reviewed, accept P06 evidence, hand-off export, questions the assistant could not answer. |
 | `/api/p01/assistant` | Assistant server route. `GROQ_API_KEY` optional; rules answers without it. |
-| `src/lib/p01/` | Rules, contract, store and assistant. Import only from `@/lib/p01`. 73 tests in `src/test/p01-*.test.ts`. |
+| `src/lib/p01/` | Rules, contract, store and assistant. Import only from `@/lib/p01`. 74 tests in `src/test/p01-*.test.ts`. |
 
 Hand-offs:
 

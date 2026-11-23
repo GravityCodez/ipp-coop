@@ -202,6 +202,21 @@ describe("model answers are completed", () => {
     expect(a).toContain("Placement (University, by a named person)");
     expect(a).toContain("Skill evidence");
   });
+  it("never says a proposed change is done", () => {
+    const r = completeReply(
+      {
+        answer: "Added Tableau!",
+        kind: "proposal",
+        sources: [],
+        patch: { add_skills: ["Tableau"] },
+        mode: "ai",
+      },
+      "add Tableau",
+      facts(draftState()),
+    );
+    expect(r.answer).toContain("Nothing is saved until you do");
+    expect(r.patch).toEqual({ add_skills: ["Tableau"] });
+  });
   it("adds the suggestion note to internship answers only", () => {
     const say = (answer: string, q = "Which fit me?") =>
       completeReply({ answer, kind: "answer", sources: ["Matching"], mode: "ai" }, q, facts())
