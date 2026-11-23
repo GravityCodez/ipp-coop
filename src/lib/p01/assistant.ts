@@ -339,18 +339,23 @@ export function rulesReply(
   return { ...base, kind: "handoff", answer: HANDOFF, sources: [] };
 }
 
+/** The fixed sentence shown with every proposed change. */
+function proposalText(f: AssistantFacts): string {
+  const note = f.editable
+    ? "Check it, then press Apply. Nothing is saved until you do."
+    : `Version ${f.version} is locked (${f.status.toLowerCase()}). Start a new version to use this.`;
+  return `I can change this in your draft. ${note}`;
+}
+
 function proposal(
   patch: ProfilePatch,
   f: AssistantFacts,
   base: { mode: "ai" | "rules"; model?: string },
 ): AssistantReply {
-  const note = f.editable
-    ? "Check it, then press Apply. Nothing is saved until you do."
-    : `Version ${f.version} is locked (${f.status.toLowerCase()}). Start a new version to use this.`;
   return {
     ...base,
     kind: "proposal",
-    answer: `I can change this in your draft. ${note}`,
+    answer: proposalText(f),
     sources: [profileSource(f)],
     patch,
   };
@@ -469,6 +474,8 @@ export function completeReply(
   question: string,
   f: AssistantFacts,
 ): AssistantReply {
+  // A model may say a change is done; nothing is done until the student applies it.
+  if (r.kind === "proposal") return { ...r, answer: proposalText(f) };
   if (r.kind !== "answer") return r;
   const lines = [r.answer];
   if (/\b(approv|decid|person to|human)/i.test(question)) {
