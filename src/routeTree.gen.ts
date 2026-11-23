@@ -11,11 +11,13 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
+import { Route as DeskRouteImport } from './routes/desk'
 import { Route as EmployerRouteImport } from './routes/employer'
 import { Route as FacultyRouteImport } from './routes/faculty'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as StudentRouteImport } from './routes/student'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
+import { Route as ApiDeskActionRouteImport } from './routes/api/desk.$action'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -25,6 +27,11 @@ const IndexRoute = IndexRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DeskRoute = DeskRouteImport.update({
+  id: '/desk',
+  path: '/desk',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EmployerRoute = EmployerRouteImport.update({
@@ -52,73 +59,92 @@ const ApiChatRoute = ApiChatRouteImport.update({
   path: '/api/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiDeskActionRoute = ApiDeskActionRouteImport.update({
+  id: '/api/desk/$action',
+  path: '/api/desk/$action',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/desk': typeof DeskRoute
   '/employer': typeof EmployerRoute
   '/faculty': typeof FacultyRoute
   '/faq': typeof FaqRoute
   '/student': typeof StudentRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/desk/$action': typeof ApiDeskActionRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/desk': typeof DeskRoute
   '/employer': typeof EmployerRoute
   '/faculty': typeof FacultyRoute
   '/faq': typeof FaqRoute
   '/student': typeof StudentRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/desk/$action': typeof ApiDeskActionRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/desk': typeof DeskRoute
   '/employer': typeof EmployerRoute
   '/faculty': typeof FacultyRoute
   '/faq': typeof FaqRoute
   '/student': typeof StudentRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/desk/$action': typeof ApiDeskActionRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/admin'
+    | '/desk'
     | '/employer'
     | '/faculty'
     | '/faq'
     | '/student'
     | '/api/chat'
+    | '/api/desk/$action'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/admin'
+    | '/desk'
     | '/employer'
     | '/faculty'
     | '/faq'
     | '/student'
     | '/api/chat'
+    | '/api/desk/$action'
   id:
     | '__root__'
     | '/'
     | '/admin'
+    | '/desk'
     | '/employer'
     | '/faculty'
     | '/faq'
     | '/student'
     | '/api/chat'
+    | '/api/desk/$action'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
+  DeskRoute: typeof DeskRoute
   EmployerRoute: typeof EmployerRoute
   FacultyRoute: typeof FacultyRoute
   FaqRoute: typeof FaqRoute
   StudentRoute: typeof StudentRoute
   ApiChatRoute: typeof ApiChatRoute
+  ApiDeskActionRoute: typeof ApiDeskActionRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -135,6 +161,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/desk': {
+      id: '/desk'
+      path: '/desk'
+      fullPath: '/desk'
+      preLoaderRoute: typeof DeskRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/employer': {
@@ -172,17 +205,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/desk/$action': {
+      id: '/api/desk/$action'
+      path: '/api/desk/$action'
+      fullPath: '/api/desk/$action'
+      preLoaderRoute: typeof ApiDeskActionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
+  DeskRoute: DeskRoute,
   EmployerRoute: EmployerRoute,
   FacultyRoute: FacultyRoute,
   FaqRoute: FaqRoute,
   StudentRoute: StudentRoute,
   ApiChatRoute: ApiChatRoute,
+  ApiDeskActionRoute: ApiDeskActionRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

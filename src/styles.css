@@ -55,6 +55,13 @@
   --color-banner-foreground: var(--banner-foreground);
   --color-status: var(--status);
   --color-status-foreground: var(--status-foreground);
+  /* P03 desk outcome colours */
+  --color-warn: var(--warn);
+  --color-warn-foreground: var(--warn-foreground);
+  --color-sent: var(--sent);
+  --color-sent-foreground: var(--sent-foreground);
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -85,6 +92,12 @@
   --banner-foreground: oklch(0.97 0.01 150);
   --status: oklch(0.93 0.04 150);
   --status-foreground: oklch(0.42 0.07 155);
+  --warn: oklch(95% .05 85);
+  --warn-foreground: oklch(45% .1 70);
+  --sent: oklch(94.5% .035 50);
+  --sent-foreground: oklch(48% .12 45);
+  --danger: oklch(94.5% .03 25);
+  --danger-foreground: oklch(48% .15 27);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.984 0.003 247.858);
   --border: oklch(0.91 0.01 145);

@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Briefcase, Building2, GraduationCap, ClipboardCheck, HelpCircle, Menu } from "lucide-react";
+import { Briefcase, Building2, GraduationCap, ClipboardCheck, HelpCircle, Menu, MessagesSquare } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { resetDemo } from "@/lib/ipp-store";
 import { ChatWidget } from "@/components/ChatWidget";
@@ -9,6 +9,7 @@ const NAV = [
   { to: "/employer", label: "Employer HR", icon: Briefcase },
   { to: "/admin", label: "University Administrator", icon: Building2 },
   { to: "/faculty", label: "Faculty Reviewer", icon: ClipboardCheck },
+  { to: "/desk", label: "Internship Desk", icon: MessagesSquare },
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {

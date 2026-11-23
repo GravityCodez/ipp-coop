@@ -9,6 +9,15 @@ import {
   WORK_MODES,
   type OpportunityInput,
 } from "@/lib/ipp-store";
+import {
+  changesRequested,
+  commitReview,
+  latestChangeRequest,
+  resubmit,
+  useP03State,
+  type Combined,
+  type ReviewItem,
+} from "@/lib/p03/review";
 
 export const Route = createFileRoute("/employer")({
   head: () => ({
@@ -117,6 +126,97 @@ function EmployerPage() {
           </ul>
         </Card>
       </Grid>
+      <ChangesRequestedSection />
     </AppShell>
+  );
+}
+
+// P03 hook into Team 2's stand-in: shows the coordinator's reason for each listing sent back and
+// lets the employer edit the fields and resubmit as the next version (back to Pending Review).
+function ChangesRequestedSection() {
+  const ipp = useIppData();
+  const p03 = useP03State();
+  if (!ipp || !p03) return null;
+  const combined: Combined = { ipp, p03 };
+  const items = changesRequested(combined);
+  return (
+    <section aria-labelledby="changes-requested-heading" className="mt-4 rounded-2xl border border-border bg-card p-5 shadow-sm">
+      <h2 id="changes-requested-heading" className="mb-3 text-lg font-semibold text-primary">Listings with changes requested</h2>
+      <div className="text-sm text-card-foreground">
+        {items.length === 0 ? (
+          <p className="rounded-lg border border-dashed border-border p-4 text-muted-foreground">
+            No listings need changes. If the university asks for changes, they appear here with the reason.
+          </p>
+        ) : (
+          <ul className="space-y-4">
+            {items.map((item) => (
+              <li key={`${item.opportunity.opportunity_id}-${item.record.version}`}>
+                <ResubmitForm item={item} reason={latestChangeRequest(combined, item.opportunity.opportunity_id)?.reason ?? ""} ipp={ipp} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function ResubmitForm({ item, reason, ipp }: { item: ReviewItem; reason: string; ipp: NonNullable<ReturnType<typeof useIppData>> }) {
+  const o = item.opportunity;
+  const id = o.opportunity_id;
+  const [form, setForm] = useState({ title: o.title, description: o.description, location: o.location, work_mode: o.work_mode as string, duration: o.duration });
+  const [error, setError] = useState("");
+  const [sent, setSent] = useState("");
+  const set = (k: keyof typeof form, v: string) => {
+    setForm((f) => ({ ...f, [k]: v }));
+    setError("");
+  };
+  const onSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    try {
+      commitReview(ipp, (c) => resubmit(c, id, form));
+      setSent(`Opportunity ${id} was resubmitted as version ${item.record.version + 1} and now waits for university review.`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "That did not send.");
+    }
+  };
+  const fid = (k: string) => `${id}-${k}`;
+  return (
+    <form onSubmit={onSubmit} noValidate className="space-y-3 rounded-xl border border-border p-4" aria-label={`Resubmit ${o.title}`}>
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <div className="font-medium">{o.title}</div>
+          <div className="text-xs text-muted-foreground">{item.organization} · {id} · version {item.record.version}</div>
+        </div>
+        <Status>Changes requested</Status>
+      </div>
+      <p className="rounded-lg bg-warn p-3 text-warn-foreground"><span className="font-medium">Reason from the university: </span>{reason}</p>
+      <div>
+        <label htmlFor={fid("title")} className="mb-1 block font-medium">Title</label>
+        <input id={fid("title")} className={inputCls} value={form.title} onChange={(e) => set("title", e.target.value)} />
+      </div>
+      <div>
+        <label htmlFor={fid("description")} className="mb-1 block font-medium">Description</label>
+        <textarea id={fid("description")} rows={4} className={inputCls} value={form.description} onChange={(e) => set("description", e.target.value)} />
+      </div>
+      <div>
+        <label htmlFor={fid("location")} className="mb-1 block font-medium">Location</label>
+        <input id={fid("location")} className={inputCls} value={form.location} onChange={(e) => set("location", e.target.value)} />
+      </div>
+      <div>
+        <label htmlFor={fid("work_mode")} className="mb-1 block font-medium">Work mode</label>
+        <select id={fid("work_mode")} className={inputCls} value={form.work_mode} onChange={(e) => set("work_mode", e.target.value)}>
+          <option value="">Select…</option>
+          {WORK_MODES.map((m) => <option key={m} value={m}>{m}</option>)}
+        </select>
+      </div>
+      <div>
+        <label htmlFor={fid("duration")} className="mb-1 block font-medium">Duration</label>
+        <input id={fid("duration")} className={inputCls} value={form.duration} onChange={(e) => set("duration", e.target.value)} />
+      </div>
+      {error && <p role="alert" className="text-xs text-destructive">{error}</p>}
+      <button type="submit" className="rounded-lg bg-primary px-4 py-2 font-semibold text-primary-foreground">Resubmit for review</button>
+      {sent && <p role="status" className="rounded-lg bg-status p-3 text-status-foreground">{sent}</p>}
+    </form>
   );
 }

@@ -139,3 +139,36 @@ When the app reads the shared database, use its records and drop the local seeds
 3. Who owns the Faculty view, and what replaces `REV-###`?
 4. Has the instructor approved the shared database as a scope change? Team 5's guide says it was agreed; Team 1 has not seen the instructor's confirmation.
 5. Employer listings need required and desirable skill IDs (AI-09) before matching can read them.
+
+## 11. Team 3 (P03) additions in the common repository
+
+Added by Team 3 on 23 Nov 2026, on top of Team 1's snapshot (commit 5384ca9).
+
+| Route / file | What it does |
+| --- | --- |
+| `/admin` | P03 review and publication, replacing the Team 1 stand-in: five-check review checklist, request changes with a reason, resubmission as a new version, approve, publish, close or withdraw, version history and a decision log. Logic in `src/lib/p03/review.ts`, tests in `src/test/p03-review.test.ts`. |
+| `/employer` (one section) | "Listings with changes requested": the employer sees the reason and resubmits. A small P03 hook inside Team 2's stand-in. |
+| `/desk` | Internship Desk (Sprint 2 AI feature): students and workplace supervisors ask Career Services during the internship. Answers only from the internship guide's policy entries; problems the guide says the university must handle become cases; questions it cannot answer go to an "unanswered" list. |
+| `/admin` → Internship desk | Sara's side of the desk: open cases sorted by urgency, "hear both sides" and root cause before closing a case, add policy entries from unanswered questions. |
+| `/api/desk/state`, `/api/desk/ask`, `/api/desk/admin` | Server routes in `src/routes/api/desk.$action.ts`, logic in `src/lib/p03/desk-server.ts` and `desk-core.ts`. |
+
+Desk server settings (environment variables, server side only, never in git):
+
+- `ANTHROPIC_API_KEY`: optional. With it, Claude Haiku reads the policy entries and sorts each message. Without it, the desk matches the policy entries directly. Limits: 10 questions per browser session, 150 AI calls per day.
+- `DESK_REDIS_URL`: optional Redis REST endpoint so every visitor sees the same cases. Without it, desk records live in server memory and reset on restart. When Team 5 gives P03 a write key for the shared Supabase, `desk-server.ts` is the one file to change.
+
+Review IDs: P03 uses `REV-0001` (four digits), the shared database format. Team 1's faculty reviews use `REV-028`; that clash is still open (section 10, question 3).
+
+## 12. Hosting on Cohesivity (one command)
+
+Besides Render, the app can run on a Cohesivity Cloudflare Worker:
+
+```bash
+node deploy/cohesivity.mjs               # build, bundle and deploy (worker name: ipp-coop)
+node deploy/cohesivity.mjs --no-deploy   # build and bundle only, to .deploy/worker.js
+```
+
+- Needs a `.cohesivity` credentials file at the repository root (gitignored), or `COHESIVITY_FILE=/path/to/.cohesivity`.
+- Server keys are embedded only when named: `COH_SECRETS=ANTHROPIC_API_KEY,DESK_REDIS_URL node deploy/cohesivity.mjs`. They go into the worker, never into the browser bundle or the repository.
+- Cohesivity workers run with an old Cloudflare compatibility date and without `nodejs_compat`. `deploy/shims/` supplies the four Node modules the build imports and a web streams fallback for React's streaming render. If a new dependency imports another `node:` module, add a shim there.
+- Static files are embedded in the worker (about 1.3 MB in total today).
