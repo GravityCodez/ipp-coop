@@ -2,7 +2,7 @@
 
 For the cross-team merge into one repository, one deployed app and one database. Read this first, then `README.md`, `docs/data-dictionary.md` and `sprint-2/README.md`.
 
-**This copy:** a public snapshot of Team 1's private working repository (GravityCodez/ipp-master) at commit deb1d61, 22 Nov 2026. It has no Lovable or Render connection, so pushing here deploys nothing and cannot break the live app. Where this file says "this repository" or `main`, it means the working repository. People are named by team role.
+**This repository:** the common app for all teams (ipp-coop-2026/ipp-coop), started from a snapshot of Team 1's private working repository (GravityCodez/ipp-master) at commit deb1d61, 22 Nov 2026. Sections 1 to 10 are Team 1's handoff and describe their working repository where they say "this repository" or `main`; sections 11 onward cover what has been added here. People are named by team role.
 
 **State on 22 Nov 2026:** `main` builds and deploys. All 52 unit tests pass (`vitest run`). The live app answers on https://ipp-master.onrender.com with the chatbot model on. All data is synthetic.
 

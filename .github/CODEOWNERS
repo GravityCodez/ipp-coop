@@ -1,0 +1,5 @@
+# Maintainers review every pull request. Add a team's integrator next to its paths once they join.
+*                     @11NOel11
+/src/lib/p03/         @11NOel11
+/src/routes/admin.tsx @11NOel11
+/src/routes/desk.tsx  @11NOel11

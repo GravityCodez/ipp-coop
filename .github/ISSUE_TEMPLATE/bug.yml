@@ -1,0 +1,29 @@
+name: Bug report
+description: Something in the app does not work as expected
+labels: [bug]
+body:
+  - type: input
+    id: page
+    attributes:
+      label: Page
+      placeholder: /admin
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: "1. Open /employer\n2. Submit a listing\n3. ..."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected and what happened
+    validations:
+      required: true
+  - type: input
+    id: team
+    attributes:
+      label: Your team
+      placeholder: Team 4 (P04)

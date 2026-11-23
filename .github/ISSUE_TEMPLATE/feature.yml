@@ -1,0 +1,22 @@
+name: Feature or user story
+description: Propose a feature or a user story for your team's part
+labels: [enhancement]
+body:
+  - type: input
+    id: team
+    attributes:
+      label: Team and part
+      placeholder: Team 2 (P02 Employer submission)
+    validations:
+      required: true
+  - type: textarea
+    id: story
+    attributes:
+      label: User story
+      placeholder: As a <role>, I want <goal> so that <benefit>.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria

@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Type-check, test and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install
+        run: npx -y bun@1.4.0 install --frozen-lockfile
+      - name: Type-check
+        run: npx -y bun@1.4.0 x tsc --noEmit
+      - name: Test
+        run: npx -y bun@1.4.0 run test
+      - name: Build
+        run: npx -y bun@1.4.0 run build

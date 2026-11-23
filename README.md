@@ -1,73 +1,117 @@
-# IPP – Master: Internship Practicum Platform
+<div align="center">
 
-> **Common repository for all teams (BUS 2010, Fall 2026).** This is the shared IPP app for the cross-team merge, started from Team 1's app (their ipp-share snapshot, history kept) with Team 3's P03 review, publication and Internship Desk added. Live copy: https://coh-ipp-coop-26b134973f81406a.cohesivity.workers.dev (deploy with `node deploy/cohesivity.mjs`, see INTEGRATION.md section 12). Team 1's Render site (https://ipp-master.onrender.com) still deploys from their private repository. People are named by team role here.
+# IPP: Internship Practicum Platform
 
-## How teams contribute
+**One shared app for the BUS 2010 Co-op project.** Employers post internships, the university reviews and publishes them, students apply, and everyone gets help from an AI desk during the internship.
 
-1. Create a branch named after your team and part, e.g. `team2-employer`.
-2. Keep your changes to your own pages and `src/lib/<your part>/` where you can; note any shared-file edits in the pull request.
-3. Run `npx -y bun@1.4.0 run test` and `npx -y bun@1.4.0 run build` before opening a pull request into `main`.
-4. Never commit keys. Supabase team keys, Groq and Anthropic keys go in environment variables only.
-5. Record what your part adds in INTEGRATION.md (one numbered section per team).
+[![CI](https://github.com/ipp-coop-2026/ipp-coop/actions/workflows/ci.yml/badge.svg)](https://github.com/ipp-coop-2026/ipp-coop/actions/workflows/ci.yml)
+[![Live demo](https://img.shields.io/badge/live%20demo-online-2f6b3f)](https://coh-ipp-coop-26b134973f81406a.cohesivity.workers.dev)
+![TanStack Start](https://img.shields.io/badge/TanStack%20Start-React%2019-1f3b2c)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6)
 
-One integrated demonstration app for a university internship practicum: Employer HR submits an opportunity, a University Administrator approves it, a Student applies, and a Faculty Reviewer sees the application and its status. All data is synthetic, role switching is simulated, and records are stored in the browser only.
+[Live demo](https://coh-ipp-coop-26b134973f81406a.cohesivity.workers.dev) · [How teams contribute](CONTRIBUTING.md) · [Integration guide](INTEGRATION.md) · [Data dictionary](docs/data-dictionary.md)
 
-Sprint 2 adds two AI features for students:
+<img src="docs/screenshots/admin-review.jpg" alt="University Administrator review queue with the AI reviewer and the five-check checklist" width="860">
 
-- **FAQ & help chatbot** (`/faq` and the "Ask IPP" button on every page): answers only from the approved FAQ (8 questions, `src/lib/ai/knowledge.ts`), cites the FAQ IDs it used, and hands anything else to the co-op office instead of guessing.
-- **Recommended internships** (Student → Recommended): a rules-based matching engine ranks the top three approved listings for a synthetic profile and explains each rank (skills, interests, preferences, gaps). Eligibility is shown separately and is not part of the ranking. A recommendation is not a placement.
+</div>
 
-Built by four class teams in Sprint 1 (BUS 2010, Fall 2026):
+> **Demo data only.** Every person, organization and listing is synthetic. Role switching is simulated; there is no real login.
 
-| Team | Role view |
-| --- | --- |
-| Team 1 | Student |
-| Team 2 | Employer HR |
-| Team 3 | University Administrator |
-| Team 4 | Faculty Reviewer |
+## What it does
 
-## Links
+The app follows one internship listing from start to finish, across the class teams' parts:
 
-| Item | Link | Access owner |
+| Step | Who | Page | Owner |
+| --- | --- | --- | --- |
+| 1. Post an opportunity | Employer HR | `/employer` | P02 (Team 2), stand-in by Team 1 |
+| 2. Review, approve and publish | University staff | `/admin` | **P03 (Team 3)** |
+| 3. Find, get recommendations and apply | Student | `/student` | P01 (Team 1), P04, P05 |
+| 4. See applications | Faculty reviewer | `/faculty` | To be decided at the Scrum of Scrums |
+| 5. Get help during the internship | Student, supervisor, Career Services | `/desk` | **P03 (Team 3)** |
+| Help and FAQ | Everyone | `/faq`, "Ask IPP" button | P01 (Team 1) |
+
+### AI features
+
+| Feature | What it does | Human in charge |
 | --- | --- | --- |
-| Lovable project (IPP - Master) | Private; editors only | Team 1 integrator (workspace owner) |
-| Published app (GitHub deploy, chatbot with AI) | https://ipp-master.onrender.com (Render web service, deploys automatically from `main`; free plan, so the first visit after 15 idle minutes takes about a minute) | Team 1 integrator |
-| Published app (Lovable) | https://ipp-master.lovable.app (anyone with the link; republish after each build). The chatbot runs in FAQ lookup mode here because the Groq key is set only on Render. | Team 1 integrator |
-| GitHub repository | Working repository: GravityCodez/ipp-master (private), two-way sync with Lovable on `main`. Public snapshot: https://github.com/GravityCodez/ipp-share | Team 1 integrator (owner); collaborators added 3 Nov |
-| Integrators | Team 1 integrator, with the data dictionary owner as backup. Other teams: to be named | Each team |
+| **AI reviewer** (`/admin`) | Reads an employer listing against the five review checks and the coordinator's own rules, then drafts a reason for the employer | The coordinator ticks every check and makes the decision; the decision log marks when an AI draft was used |
+| **Internship Desk** (`/desk`) | Answers student and supervisor questions only from the MBZUAI 2025–2026 Industry Internship Guide, escalates urgent cases to Career Services, and records questions it cannot answer | Career Services resolves escalations and adds new guide entries |
+| **FAQ chatbot** (`/faq`) | Answers from the approved FAQ and cites the entry it used | Anything outside the FAQ goes to the co-op office |
+| **Recommendations** (`/student`) | Rules-based top three listings with reasons and gaps | A recommendation is never a placement |
 
-## How we work
+Every AI feature falls back to a non-AI mode (guide matching, FAQ lookup, rule-based hints) when no model key is set on the host, so the demo always works.
 
-- App changes go through `main` on GitHub or the Lovable project (they stay in sync), one integrator at a time (D-24). Keep `main` working: run the tests before pushing.
-- Teams submit feature briefs and test evidence through Teams or GitHub issues.
-- Shared fields and statuses change only through the Scrum of Scrums (docs/decisions.md).
-- Never put credentials, tokens or real personal data in prompts, Teams or this repository.
+<table>
+<tr>
+<td width="50%"><img src="docs/screenshots/student.jpg" alt="Student view with published opportunities"></td>
+<td width="50%"><img src="docs/screenshots/desk.jpg" alt="Internship Desk chat for students and supervisors"></td>
+</tr>
+<tr>
+<td align="center">Student: published listings</td>
+<td align="center">Internship Desk</td>
+</tr>
+</table>
+
+## Quick start
+
+```bash
+npx -y bun@1.4.0 install --frozen-lockfile
+npx -y bun@1.4.0 run dev      # http://localhost:8080
+npx -y bun@1.4.0 run test     # 73 unit tests
+npx -y bun@1.4.0 run build
+```
+
+Optional server-side keys (never in git; use `.env.local` locally or the host's settings):
+
+| Variable | Turns on |
+| --- | --- |
+| `GROQ_API_KEY` | AI answers in the FAQ chatbot |
+| `ANTHROPIC_API_KEY` | AI reviewer and AI answers in the Internship Desk |
+| `DESK_REDIS_URL` | Desk cases shared across devices (otherwise kept in server memory) |
+
+## Deploying
+
+| Host | Command | Notes |
+| --- | --- | --- |
+| Cohesivity (shared demo) | `node deploy/cohesivity.mjs` | Needs a `.cohesivity` file (gitignored). See [INTEGRATION.md §12](INTEGRATION.md) |
+| Render (Team 1) | [`render.yaml`](render.yaml) | Build: `NITRO_PRESET=node-server bun run build`; start: `node .output/server/index.mjs` |
+
+## Project structure
+
+```text
+src/
+  routes/            one file per page (/student, /employer, /admin, /faculty, /desk, /faq)
+    api/             server routes: chat, ai-review, desk
+  components/        AppShell, Internship Desk admin, shadcn/ui
+  lib/
+    ipp-store.ts     shared records and seed data (Team 1)
+    ai/              FAQ chatbot and matching (Team 1)
+    p03/             review, publication, AI reviewer and desk (Team 3)
+  test/              vitest suites
+deploy/              one-command Cohesivity hosting and runtime shims
+docs/                requirements, data dictionary, decisions, test cases
+sprint-1/, sprint-2/ sprint boards, feature briefs, Scrum of Scrums records
+```
+
+## Data
+
+The demo keeps records in each browser (`localStorage`), so two devices do not see each other's changes yet. The class agreed on one shared Supabase database hosted by Team 5; the mapping from this app's records to its tables is in [INTEGRATION.md](INTEGRATION.md).
+
+## Contributing
+
+Each team works on a branch and opens a pull request into `main`; CI must pass and the maintainers review before merging. Read [CONTRIBUTING.md](CONTRIBUTING.md) first. Never commit keys or real personal data (see [SECURITY.md](SECURITY.md)).
 
 ## Documents
 
 | File | Contents |
 | --- | --- |
-| INTEGRATION.md | Handoff for the cross-team merge: which team owns each part, code map, deploy, shared-database mapping, merge order |
-| render.yaml | Render Blueprint with the live service's settings (secrets set in Render only) |
-| docs/requirements.md | Product and Sprint 1 goals, shortlist, traceability |
-| docs/data-dictionary.md | Common records, IDs, statuses, seed data, workflow |
-| docs/decisions.md | Decision log |
-| docs/test-cases.md | Acceptance tests and results |
-| docs/prompt-log.md | Lovable prompts and resulting changes |
-| sprint-1/ | Sprint board, feature briefs, staged prompts, Scrum of Scrums record |
+| [INTEGRATION.md](INTEGRATION.md) | Team ownership, code map, shared-database mapping, deploy, merge order |
+| [docs/requirements.md](docs/requirements.md) | Product goals, shortlist, traceability |
+| [docs/data-dictionary.md](docs/data-dictionary.md) | Records, IDs, statuses, seed data |
+| [docs/decisions.md](docs/decisions.md) | Decision log |
+| [docs/test-cases.md](docs/test-cases.md) | Acceptance tests and results |
+| [sprint-2/crisp-dm-mapping.md](sprint-2/crisp-dm-mapping.md) | CRISP-DM mapping for the AI features |
 
-## Running and editing the app
+## Credits
 
-```bash
-bun install --frozen-lockfile
-bun run dev        # http://localhost:8080 (chatbot uses FAQ lookup unless GROQ_API_KEY is set)
-bun run test       # unit tests, including matching and chatbot safeguards
-```
-
-The chatbot calls Groq (`openai/gpt-oss-120b`, backup `openai/gpt-oss-20b`) from the server route `src/routes/api/chat.ts`. Set `GROQ_API_KEY` only as a server environment variable (Render dashboard, or `.env.local` for local runs; both are outside git). Never put the key in code, prompts, Teams or this repository. Without a key, or when the model is rate limited, the route answers from the approved FAQ lookup.
-
-Render build command: `npx -y bun@1.4.0 install --frozen-lockfile && NITRO_PRESET=node-server npx -y bun@1.4.0 run build`; start command: `node .output/server/index.mjs`.
-
-
-- Edit the app in the Lovable project (editors only), one build slot at a time.
-- The app is a TypeScript + Tailwind project synced from Lovable. Source is in `src/`; the shared data model and seed data are in `src/lib/ipp-store.ts`.
+Built by the BUS 2010 (Fall 2026) class teams at MBZUAI. The base app is Team 1's (P01); Team 3 (P03) added review and publication, the AI reviewer and the Internship Desk. Policy answers come from the MBZUAI 2025–2026 Industry Internship Guide.

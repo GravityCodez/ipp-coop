@@ -9,7 +9,7 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 
-- This public copy is a snapshot for the cross-team merge. It is not connected to Lovable or Render, so the Lovable note above applies only to Team 1's working repository.
+- This is the common repository for all teams (ipp-coop-2026/ipp-coop). It is not connected to Lovable; the Lovable note above applies only to Team 1's working repository. Changes reach main through pull requests (CONTRIBUTING.md).
 
 - Merging this app with other teams' apps or the shared co-op database: read `INTEGRATION.md` first (ownership by team, code map, deploy, record and skill mappings, merge order).
 - All IPP demo records live in browser localStorage under one key via `src/lib/ipp-store.ts`; why: demo step forbids backend/auth, and records must persist across simulated role switches.
