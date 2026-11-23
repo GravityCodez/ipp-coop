@@ -201,8 +201,8 @@ Added by Team 1 on 24 Nov 2026 (Sprint 3).
 
 | Route / file | What it does |
 | --- | --- |
-| `/p01/profile` (Student → Interests) | P01 profile and interests: draft, submit, clarification, revision as a new version, skills with evidence status, matching preview (P05 engine on live listings), version history. The profile assistant explains the profile and proposes changes to a draft. |
-| `/p01/coordinator` (Admin → Profiles) | Review queue with changed fields, request clarification, mark reviewed, accept P06 evidence, hand-off export, questions the assistant could not answer. |
+| `/p01/profile` (footer link, Student view) | P01 profile and interests: draft, submit, clarification, revision as a new version, skills with evidence status, matching preview (P05 engine on live listings), version history. The profile assistant explains the profile and proposes changes to a draft. |
+| `/p01/coordinator` (footer link, Admin view) | Review queue with changed fields, request clarification, mark reviewed, accept P06 evidence, hand-off export, questions the assistant could not answer. |
 | `/api/p01/assistant` | Assistant server route. `GROQ_API_KEY` optional; rules answers without it. |
 | `src/lib/p01/` | Rules, contract, store and assistant. Import only from `@/lib/p01`. 70 tests in `src/test/p01-*.test.ts`. |
 
@@ -215,4 +215,4 @@ Hand-offs:
 | P04 | `currentReviewed()` or `exportVersion()`: the reviewed profile version to attach to an application | Ready; P04 not connected yet |
 | P02 | Launchpad's `/profile` keeps its own short profile for applying | Open: agree whether Launchpad's apply step reads the P01 version |
 
-Shared files changed: `AppShell.tsx` (two nav entries, demo reset, the floating assistant is hidden on `/p01/profile`, desktop navigation from 1024 px so the longer menu fits) and `src/lib/p02/store.ts` (`viewForPath` knows the two P01 pages).
+Group 2's menus are unchanged. Shared files changed: `AppShell.tsx` (two footer links, demo reset, the floating assistant is hidden on `/p01/profile` only) and `src/lib/p02/store.ts` (`viewForPath` knows the two P01 pages).

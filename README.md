@@ -52,7 +52,7 @@ The common app uses **Group 2's Launchpad** (P02, Employer) as its interface, ag
 
 | Feature | Where | Built by | Human in charge |
 | --- | --- | --- | --- |
-| Profile assistant | Student → Interests | Team 1 (P01) | Explains the profile and proposes changes to a draft; the student applies them, a coordinator reviews |
+| Profile assistant | `/p01/profile` | Team 1 (P01) | Explains the profile and proposes changes to a draft; the student applies them, a coordinator reviews |
 | IPP Assistant (FAQ chatbot) | Student, floating button | Group 2 (P02) | Answers only from the approved FAQ; "Talk to a human" hands off to the coordinator |
 | Recommended for you | Student → Opportunities | Group 2 (P02) | Suggestions with reasons; placements are approved by a person |
 | Draft with AI, Improve wording, Make shorter, Suggest skills | Employer → Post Opportunity | Group 2 (P02) | The employer edits and submits; the coordinator approves |
