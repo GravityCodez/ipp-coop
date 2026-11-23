@@ -1,5 +1,34 @@
-# Maintainers review every pull request. Add a team's integrator next to its paths once they join.
-*                     @11NOel11
-/src/lib/p03/         @11NOel11
-/src/routes/admin.tsx @11NOel11
-/src/routes/desk.tsx  @11NOel11
+# Who reviews what. Later lines win. See docs/ARCHITECTURE.md for the module rules.
+
+# Default: maintainers
+*                                   @11NOel11 @ipp-coop-2026/maintainers
+
+# Shared core (maintainer review)
+/src/lib/ipp-store.ts               @ipp-coop-2026/maintainers @ipp-coop-2026/p01-student-profiles
+/src/lib/db/                        @ipp-coop-2026/maintainers @ipp-coop-2026/p05-matching-db
+/src/components/AppShell.tsx        @ipp-coop-2026/maintainers
+/src/components/ui/                 @ipp-coop-2026/maintainers
+/src/styles.css                     @ipp-coop-2026/maintainers
+/deploy/                            @11NOel11 @ipp-coop-2026/maintainers
+/.github/                           @11NOel11
+
+# Team modules
+/src/lib/ai/                        @ipp-coop-2026/p01-student-profiles
+/src/routes/faq.tsx                 @ipp-coop-2026/p01-student-profiles
+/src/routes/api/chat.ts             @ipp-coop-2026/p01-student-profiles
+/src/routes/student.tsx             @ipp-coop-2026/p01-student-profiles @ipp-coop-2026/p04-discovery @ipp-coop-2026/p05-matching-db
+/src/routes/employer.tsx            @ipp-coop-2026/p02-employer
+/src/routes/admin.tsx               @ipp-coop-2026/p03-review
+/src/routes/desk.tsx                @ipp-coop-2026/p03-review
+/src/routes/api/ai-review.ts        @ipp-coop-2026/p03-review
+/src/routes/api/desk.$action.ts     @ipp-coop-2026/p03-review
+/src/components/DeskAdmin.tsx       @ipp-coop-2026/p03-review
+/src/lib/p03/                       @ipp-coop-2026/p03-review
+
+/src/**/p01*                        @ipp-coop-2026/p01-student-profiles
+/src/**/p02*                        @ipp-coop-2026/p02-employer
+/src/**/p03*                        @ipp-coop-2026/p03-review
+/src/**/p04*                        @ipp-coop-2026/p04-discovery
+/src/**/p05*                        @ipp-coop-2026/p05-matching-db
+/src/**/p06*                        @ipp-coop-2026/p06-prep-lms
+/src/**/p07*                        @ipp-coop-2026/p07-progress

@@ -9,7 +9,7 @@
 ![TanStack Start](https://img.shields.io/badge/TanStack%20Start-React%2019-1f3b2c)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6)
 
-[Live demo](https://coh-ipp-coop-26b134973f81406a.cohesivity.workers.dev) · [How teams contribute](CONTRIBUTING.md) · [Integration guide](INTEGRATION.md) · [Data dictionary](docs/data-dictionary.md)
+[Live demo](https://coh-ipp-coop-26b134973f81406a.cohesivity.workers.dev) · [Architecture](docs/ARCHITECTURE.md) · [Workflow and plan](docs/WORKFLOW.md) · [Contributing](CONTRIBUTING.md) · [Integration guide](INTEGRATION.md)
 
 <img src="docs/screenshots/admin-review.jpg" alt="University Administrator review queue with the AI reviewer and the five-check checklist" width="860">
 
@@ -99,12 +99,14 @@ The demo keeps records in each browser (`localStorage`), so two devices do not s
 
 ## Contributing
 
-Each team works on a branch and opens a pull request into `main`; CI must pass and the maintainers review before merging. Read [CONTRIBUTING.md](CONTRIBUTING.md) first. Never commit keys or real personal data (see [SECURITY.md](SECURITY.md)).
+One repository, one app, one module per team ([architecture](docs/ARCHITECTURE.md)). Each team works on `p0X/...` branches and opens pull requests into `main`; CI and one approval are required ([workflow](docs/WORKFLOW.md)). Read [CONTRIBUTING.md](CONTRIBUTING.md) first. Never commit keys or real personal data (see [SECURITY.md](SECURITY.md)).
 
 ## Documents
 
 | File | Contents |
 | --- | --- |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | One app with a module per team, folder ownership, module rules, data migration path |
+| [docs/WORKFLOW.md](docs/WORKFLOW.md) | Roles, branches, rules on `main`, releases, the phase plan to the final presentation |
 | [INTEGRATION.md](INTEGRATION.md) | Team ownership, code map, shared-database mapping, deploy, merge order |
 | [docs/requirements.md](docs/requirements.md) | Product goals, shortlist, traceability |
 | [docs/data-dictionary.md](docs/data-dictionary.md) | Records, IDs, statuses, seed data |
