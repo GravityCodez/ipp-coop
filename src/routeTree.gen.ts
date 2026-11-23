@@ -16,6 +16,7 @@ import { Route as EmployerRouteImport } from './routes/employer'
 import { Route as FacultyRouteImport } from './routes/faculty'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as StudentRouteImport } from './routes/student'
+import { Route as ApiAiReviewRouteImport } from './routes/api/ai-review'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiDeskActionRouteImport } from './routes/api/desk.$action'
 
@@ -54,6 +55,11 @@ const StudentRoute = StudentRouteImport.update({
   path: '/student',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAiReviewRoute = ApiAiReviewRouteImport.update({
+  id: '/api/ai-review',
+  path: '/api/ai-review',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiChatRoute = ApiChatRouteImport.update({
   id: '/api/chat',
   path: '/api/chat',
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/faculty': typeof FacultyRoute
   '/faq': typeof FaqRoute
   '/student': typeof StudentRoute
+  '/api/ai-review': typeof ApiAiReviewRoute
   '/api/chat': typeof ApiChatRoute
   '/api/desk/$action': typeof ApiDeskActionRoute
 }
@@ -84,6 +91,7 @@ export interface FileRoutesByTo {
   '/faculty': typeof FacultyRoute
   '/faq': typeof FaqRoute
   '/student': typeof StudentRoute
+  '/api/ai-review': typeof ApiAiReviewRoute
   '/api/chat': typeof ApiChatRoute
   '/api/desk/$action': typeof ApiDeskActionRoute
 }
@@ -96,6 +104,7 @@ export interface FileRoutesById {
   '/faculty': typeof FacultyRoute
   '/faq': typeof FaqRoute
   '/student': typeof StudentRoute
+  '/api/ai-review': typeof ApiAiReviewRoute
   '/api/chat': typeof ApiChatRoute
   '/api/desk/$action': typeof ApiDeskActionRoute
 }
@@ -109,6 +118,7 @@ export interface FileRouteTypes {
     | '/faculty'
     | '/faq'
     | '/student'
+    | '/api/ai-review'
     | '/api/chat'
     | '/api/desk/$action'
   fileRoutesByTo: FileRoutesByTo
@@ -120,6 +130,7 @@ export interface FileRouteTypes {
     | '/faculty'
     | '/faq'
     | '/student'
+    | '/api/ai-review'
     | '/api/chat'
     | '/api/desk/$action'
   id:
@@ -131,6 +142,7 @@ export interface FileRouteTypes {
     | '/faculty'
     | '/faq'
     | '/student'
+    | '/api/ai-review'
     | '/api/chat'
     | '/api/desk/$action'
   fileRoutesById: FileRoutesById
@@ -143,6 +155,7 @@ export interface RootRouteChildren {
   FacultyRoute: typeof FacultyRoute
   FaqRoute: typeof FaqRoute
   StudentRoute: typeof StudentRoute
+  ApiAiReviewRoute: typeof ApiAiReviewRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiDeskActionRoute: typeof ApiDeskActionRoute
 }
@@ -198,6 +211,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudentRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/ai-review': {
+      id: '/api/ai-review'
+      path: '/api/ai-review'
+      fullPath: '/api/ai-review'
+      preLoaderRoute: typeof ApiAiReviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/chat': {
       id: '/api/chat'
       path: '/api/chat'
@@ -223,6 +243,7 @@ const rootRouteChildren: RootRouteChildren = {
   FacultyRoute: FacultyRoute,
   FaqRoute: FaqRoute,
   StudentRoute: StudentRoute,
+  ApiAiReviewRoute: ApiAiReviewRoute,
   ApiChatRoute: ApiChatRoute,
   ApiDeskActionRoute: ApiDeskActionRoute,
 }

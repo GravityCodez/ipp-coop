@@ -83,6 +83,21 @@ export async function handleAdmin(body: unknown) {
 
 export type AskResult = { status: number; body: Record<string, unknown> };
 
+/** One AI call against the shared daily cap (the desk and the AI reviewer share it). */
+export async function takeAiQuota(): Promise<boolean> {
+  try {
+    return (
+      (await incr(`${DESK_KEY}:ai:${new Date().toISOString().slice(0, 10)}`, 172800)) <=
+      AI_DAILY_CAP
+    );
+  } catch {
+    return true;
+  }
+}
+
+export const aiKey = () => env("ANTHROPIC_API_KEY");
+export const AI_MODELS = MODELS;
+
 export async function handleAsk(body: {
   role?: unknown;
   question?: unknown;

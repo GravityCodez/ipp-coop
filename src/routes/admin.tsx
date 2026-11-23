@@ -1,9 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState, type ReactNode } from "react";
+import { Sparkles } from "lucide-react";
 import { AppShell, Card, PageHeader, Status } from "@/components/AppShell";
 import { DeskAdmin } from "@/components/DeskAdmin";
 import { useIppData, PLACEMENT_STATUS } from "@/lib/ipp-store";
+import { requestAiReview, type AiReview } from "@/lib/p03/ai";
 import {
+  addRule,
   approve,
   changesRequested,
   checklistHints,
@@ -12,11 +15,14 @@ import {
   closeListing,
   commitReview,
   decisionLog,
+  decline,
+  declinedListings,
   latestChangeRequest,
   listingLabel,
   publish,
   publishedListings,
   readyToPublish,
+  removeRule,
   requestChanges,
   REVIEWER,
   reviewQueue,
@@ -85,7 +91,7 @@ function AdminPage() {
   const queue = reviewQueue(combined);
   const ready = readyToPublish(combined);
   const live = publishedListings(combined);
-  const sentBack = changesRequested(combined);
+  const sentBack = [...changesRequested(combined), ...declinedListings(combined)];
   const closed = closedListings(combined);
   const log = decisionLog(combined);
 
@@ -102,7 +108,7 @@ function AdminPage() {
 
   const counts: [string, number][] = [
     ["Waiting for review", queue.length],
-    ["Changes requested", sentBack.length],
+    ["Sent back or declined", sentBack.length],
     ["Ready to publish", ready.length],
     ["Published", live.length],
     ["Closed or withdrawn", closed.length],
@@ -185,10 +191,10 @@ function AdminPage() {
           )}
         </Card>
 
-        <Card title="Waiting for the employer">
+        <Card title="Sent back to employers">
           <p className="mb-3 text-muted-foreground">
-            Changes were requested. The employer sees your reason and can edit and resubmit from the
-            Employer HR view.
+            The employer sees your reason in the Employer HR view. After a change request they can
+            edit and resubmit; a declined listing stays closed.
           </p>
           {sentBack.length === 0 ? (
             <Empty>No opportunities are waiting on an employer.</Empty>
@@ -200,7 +206,10 @@ function AdminPage() {
                   <ListingRow key={item.opportunity.opportunity_id} item={item} combined={combined}>
                     {req?.reason && (
                       <p className="text-sm">
-                        <span className="font-medium">Your reason ({req.review_id}): </span>
+                        <span className="font-medium">
+                          {req.type === "Declined" ? "Declined" : "Your reason"} ({req.review_id}
+                          ):{" "}
+                        </span>
                         {req.reason}
                       </p>
                     )}
@@ -220,6 +229,8 @@ function AdminPage() {
             </ul>
           </Card>
         )}
+
+        <RulesCard combined={combined} run={run} />
 
         <Card title="Decision log">
           <p className="mb-3 text-muted-foreground">
@@ -241,7 +252,7 @@ function AdminPage() {
                         <span className="font-normal text-muted-foreground"> · {e.review_id}</span>
                       )}
                     </span>
-                    <Status>{e.type}</Status>
+                    <Status>{e.ai_assisted ? `${e.type} · AI draft used` : e.type}</Status>
                   </div>
                   {e.reason && <p className="mt-1">"{e.reason}"</p>}
                   <p className="mt-0.5 text-xs text-muted-foreground">
@@ -389,7 +400,29 @@ function ReviewCard({ item, combined, run }: { item: ReviewItem; combined: Combi
   const id = o.opportunity_id;
   const [reason, setReason] = useState("");
   const [error, setError] = useState("");
+  const [ai, setAi] = useState<AiReview | null>(null);
+  const [aiState, setAiState] = useState<"idle" | "loading" | "error">("idle");
+  const [aiError, setAiError] = useState("");
+  const [aiDraftUsed, setAiDraftUsed] = useState(false);
   const hints = useMemo(() => checklistHints(o), [o]);
+  const aiOpts = () => ({ reviewer: REVIEWER, ai_assisted: aiDraftUsed && !!reason.trim() });
+  const askAi = async () => {
+    setAiState("loading");
+    setAiError("");
+    try {
+      setAi(
+        await requestAiReview(
+          o,
+          item.organization,
+          (combined.p03.rules ?? []).map((r) => r.text),
+        ),
+      );
+      setAiState("idle");
+    } catch (err) {
+      setAiError(err instanceof Error ? err.message : "The AI reviewer could not answer.");
+      setAiState("error");
+    }
+  };
   const changes =
     record.version > 1 ? versionChanges(record, record.version - 1, record.version) : [];
   const allTicked = CHECKLIST.every((c) => record.ticks.includes(c.key));
@@ -440,6 +473,76 @@ function ReviewCard({ item, combined, run }: { item: ReviewItem; combined: Combi
         </section>
       )}
 
+      <section
+        aria-labelledby={`ai-${id}`}
+        className="mt-4 rounded-lg border border-primary/25 bg-accent/40 p-3"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h4
+            id={`ai-${id}`}
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary"
+          >
+            <Sparkles aria-hidden="true" className="h-4 w-4" /> AI reviewer
+          </h4>
+          <button
+            type="button"
+            onClick={askAi}
+            disabled={aiState === "loading"}
+            className={`rounded-lg bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground disabled:opacity-50 ${focus}`}
+          >
+            {aiState === "loading"
+              ? "Reading the submission…"
+              : ai
+                ? "Ask again"
+                : "Ask the AI reviewer"}
+          </button>
+        </div>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Suggestions only. It reads the submission against the five checks and your review rules.
+          You still tick every check and decide.
+        </p>
+        <div role="status" aria-live="polite">
+          {aiState === "error" && <p className="mt-2 text-sm text-warn-foreground">{aiError}</p>}
+          {ai && aiState !== "loading" && (
+            <div className="mt-2 space-y-2 text-sm">
+              {ai.summary && <p>{ai.summary}</p>}
+              {ai.rule_flags.length > 0 && (
+                <ul className="list-disc pl-5 text-warn-foreground">
+                  {ai.rule_flags.map((f) => (
+                    <li key={f}>{f}</li>
+                  ))}
+                </ul>
+              )}
+              {ai.draft_reason && (
+                <div className="rounded-lg border border-border bg-card p-2">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Draft reason for the employer
+                  </p>
+                  <p className="mt-1">{ai.draft_reason}</p>
+                  <button
+                    type="button"
+                    className={`mt-2 rounded-lg border border-border px-2.5 py-1 text-xs font-medium hover:bg-muted ${focus}`}
+                    onClick={() => {
+                      setReason(ai.draft_reason);
+                      setAiDraftUsed(true);
+                      setError("");
+                      requestAnimationFrame(() => document.getElementById(`reason-${id}`)?.focus());
+                    }}
+                  >
+                    Use this draft, then edit it
+                  </button>
+                </div>
+              )}
+              {ai.model && (
+                <p className="text-xs text-muted-foreground">
+                  Model: {ai.model}. The decision log marks decisions that used the draft.
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      </section>
+
       <fieldset className="mt-4">
         <legend className="mb-1 text-sm font-semibold">
           Review checklist ({record.ticks.length} of {CHECKLIST.length})
@@ -475,6 +578,12 @@ function ReviewCard({ item, combined, run }: { item: ReviewItem; combined: Combi
                       {h.ok === false ? "Needs attention: " : h.ok ? "Looks fine: " : "Your call: "}
                       {h.note}
                     </span>
+                    {ai?.checks[c.key as CheckKey] && (
+                      <span className="block text-xs text-primary">
+                        AI ({ai.checks[c.key as CheckKey].status}):{" "}
+                        {ai.checks[c.key as CheckKey].note}
+                      </span>
+                    )}
                   </span>
                 </label>
               </li>
@@ -488,7 +597,7 @@ function ReviewCard({ item, combined, run }: { item: ReviewItem; combined: Combi
           Reason for the employer
         </label>
         <p className="mb-2 text-xs text-muted-foreground">
-          Needed to request changes. The employer reads it word for word.
+          Needed to request changes or decline. The employer reads it word for word.
         </p>
         {asks.length > 0 && (
           <div className="mb-2 flex flex-wrap gap-2">
@@ -533,7 +642,7 @@ function ReviewCard({ item, combined, run }: { item: ReviewItem; combined: Combi
           onClick={() =>
             setError(
               run(
-                (c) => approve(c, id, { reviewer: REVIEWER }),
+                (c) => approve(c, id, aiOpts()),
                 `Opportunity ${id} version ${record.version} was approved. Publish it when students should see it.`,
               ) ?? "",
             )
@@ -546,7 +655,7 @@ function ReviewCard({ item, combined, run }: { item: ReviewItem; combined: Combi
           className={quietBtn}
           onClick={() => {
             const msg = run(
-              (c) => requestChanges(c, id, reason),
+              (c) => requestChanges(c, id, reason, aiOpts()),
               `Changes were requested for ${id}. The employer can see your reason.`,
             );
             setError(msg ?? "");
@@ -554,6 +663,30 @@ function ReviewCard({ item, combined, run }: { item: ReviewItem; combined: Combi
           }}
         >
           Request changes
+        </button>
+        <button
+          type="button"
+          className={`rounded-lg px-3 py-2 text-sm font-medium text-destructive hover:bg-muted ${focus}`}
+          onClick={() => {
+            if (!reason.trim()) {
+              setError("Enter a reason the employer can act on.");
+              return;
+            }
+            if (
+              !window.confirm(
+                `Decline ${id}? The employer will see your reason and cannot resubmit.`,
+              )
+            )
+              return;
+            setError(
+              run(
+                (c) => decline(c, id, reason, aiOpts()),
+                `${id} was declined. The employer can see your reason.`,
+              ) ?? "",
+            );
+          }}
+        >
+          Decline
         </button>
         {!allTicked && (
           <span id={`approve-hint-${id}`} className="text-xs text-muted-foreground">
@@ -581,5 +714,76 @@ function ReviewCard({ item, combined, run }: { item: ReviewItem; combined: Combi
         </details>
       )}
     </article>
+  );
+}
+
+/** The feedback loop: rules the coordinator adds are read by the AI reviewer on the next review. */
+function RulesCard({ combined, run }: { combined: Combined; run: Run }) {
+  const rules = combined.p03.rules ?? [];
+  const [text, setText] = useState("");
+  const [error, setError] = useState("");
+  return (
+    <Card title="Review rules for the AI">
+      <p className="mb-3 text-muted-foreground">
+        The AI reviewer reads these on top of the five checks. When it misses something, add a rule;
+        no model change is needed.
+      </p>
+      {rules.length === 0 ? (
+        <Empty>No extra rules yet. The AI uses the five checks only.</Empty>
+      ) : (
+        <ul className="mb-3 space-y-2">
+          {rules.map((r) => (
+            <li
+              key={r.rule_id}
+              className="flex items-start justify-between gap-2 rounded-lg border border-border p-2 text-sm"
+            >
+              <span className="min-w-0 break-words">{r.text}</span>
+              <button
+                type="button"
+                className={`shrink-0 rounded-md px-2 py-0.5 text-xs text-muted-foreground hover:bg-muted ${focus}`}
+                aria-label={`Remove rule ${r.rule_id}`}
+                onClick={() => run((c) => removeRule(c, r.rule_id))}
+              >
+                Remove
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <form
+        className="mt-3 flex flex-col gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          const msg = run(
+            (c) => addRule(c, text),
+            "Rule added. The AI reviewer reads it next time.",
+          );
+          setError(msg ?? "");
+          if (!msg) setText("");
+        }}
+      >
+        <label htmlFor="new-rule" className="text-sm font-semibold">
+          New rule
+        </label>
+        <input
+          id="new-rule"
+          className={inputCls}
+          value={text}
+          placeholder="For example: Overseas placements must state who covers travel."
+          onChange={(e) => {
+            setText(e.target.value);
+            setError("");
+          }}
+        />
+        {error && (
+          <p role="alert" className="text-xs text-destructive">
+            {error}
+          </p>
+        )}
+        <button type="submit" className={`w-fit ${quietBtn}`}>
+          Add rule
+        </button>
+      </form>
+    </Card>
   );
 }

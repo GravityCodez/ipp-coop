@@ -12,7 +12,10 @@ import {
 import {
   changesRequested,
   commitReview,
+  declinedListings,
   latestChangeRequest,
+  listingLabel,
+  reviewItems,
   resubmit,
   useP03State,
   type Combined,
@@ -38,6 +41,13 @@ const inputCls = "w-full rounded-lg border border-input bg-background px-3 py-2 
 
 function EmployerPage() {
   const data = useIppData();
+  const p03 = useP03State();
+  // P03: show the review stage (Changes Requested, Ready to publish, Closed...) instead of
+  // Team 1's two-value approval_status, which reads "Pending Review" for closed listings.
+  const labels =
+    data && p03
+      ? new Map(reviewItems({ ipp: data, p03 }).map((i) => [i.opportunity.opportunity_id, listingLabel(i.record)]))
+      : null;
   const [form, setForm] = useState<OpportunityInput>(EMPTY);
   const [errors, setErrors] = useState<Partial<Record<keyof OpportunityInput, string>>>({});
   const [authorized, setAuthorized] = useState(true);
@@ -111,7 +121,7 @@ function EmployerPage() {
         </Card>
         <Card title="Submitted opportunities">
           <p className="mb-3 text-muted-foreground">
-            "Pending Review" opportunities await university approval. "Approved" opportunities are visible to students.
+            Each listing shows where it is in the university review. Only "Published" listings are visible to students.
           </p>
           <ul className="space-y-2">
             {data?.opportunities.map((o) => (
@@ -120,7 +130,7 @@ function EmployerPage() {
                   <div className="font-medium">{o.title}</div>
                   <div className="text-xs text-muted-foreground">{employerName(o.employer_id)} · {o.opportunity_id}</div>
                 </div>
-                <Status>{o.approval_status}</Status>
+                <Status>{labels?.get(o.opportunity_id) ?? o.approval_status}</Status>
               </li>
             ))}
           </ul>
@@ -139,6 +149,7 @@ function ChangesRequestedSection() {
   if (!ipp || !p03) return null;
   const combined: Combined = { ipp, p03 };
   const items = changesRequested(combined);
+  const declined = declinedListings(combined);
   return (
     <section aria-labelledby="changes-requested-heading" className="mt-4 rounded-2xl border border-border bg-card p-5 shadow-sm">
       <h2 id="changes-requested-heading" className="mb-3 text-lg font-semibold text-primary">Listings with changes requested</h2>
@@ -155,6 +166,28 @@ function ChangesRequestedSection() {
               </li>
             ))}
           </ul>
+        )}
+        {declined.length > 0 && (
+          <>
+            <h3 className="mb-2 mt-5 font-semibold">Declined listings</h3>
+            <ul className="space-y-2">
+              {declined.map((item) => (
+                <li key={item.opportunity.opportunity_id} className="rounded-xl border border-border p-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="font-medium">{item.opportunity.title}</span>
+                    <Status>Declined</Status>
+                  </div>
+                  <p className="mt-1">
+                    <span className="font-medium">University's reason: </span>
+                    {latestChangeRequest(combined, item.opportunity.opportunity_id)?.reason ?? ""}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    This listing will not be published. Submit a new opportunity if the role changes.
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </>
         )}
       </div>
     </section>

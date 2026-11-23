@@ -31,7 +31,21 @@ dist-ssr
 *.sln
 *.sw?
 
-# Cohesivity hosting (secrets and build output)
+# Secrets: never commit keys. Only .env.example (no real values) is tracked.
+.env
+.env.*
+!.env.example
 .cohesivity
-.deploy/
+.cohesivity*
 .anthropic-key
+.groq-key
+*-key
+*.key
+*.pem
+*.p12
+secrets/
+credentials*.json
+service-account*.json
+
+# Cohesivity build output (can contain embedded keys)
+.deploy/

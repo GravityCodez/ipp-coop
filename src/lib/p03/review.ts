@@ -30,10 +30,16 @@ import {
 export const P03_STORAGE_KEY = "ipp-p03-review-v1";
 export const REVIEWER = "Sara Ahmed (Careers coordinator)";
 
-export type ReviewStatus = "Pending Review" | "Changes Requested" | "Approved";
+export type ReviewStatus = "Pending Review" | "Changes Requested" | "Declined" | "Approved";
 export type ListingStatus = "Not published" | "Published" | "Closed" | "Withdrawn";
 export type EventType =
-  "Resubmitted" | "Changes Requested" | "Approved" | "Published" | "Closed" | "Withdrawn";
+  | "Resubmitted"
+  | "Changes Requested"
+  | "Declined"
+  | "Approved"
+  | "Published"
+  | "Closed"
+  | "Withdrawn";
 
 /** The fields an employer submits. Every submission and resubmission is kept as a version. */
 export interface VersionSnapshot {
@@ -67,12 +73,23 @@ export interface P03Event {
   review_id?: string;
   reason?: string;
   checklist?: CheckKey[];
+  /** True when the coordinator started from the AI reviewer's draft reason. */
+  ai_assisted?: boolean;
+  at: string;
+}
+
+/** A rule the coordinator adds; the AI reviewer reads every rule on top of the five checks. */
+export interface ReviewRule {
+  rule_id: string;
+  text: string;
+  added_by: string;
   at: string;
 }
 
 export interface P03State {
   records: Record<string, P03Record>;
   events: P03Event[];
+  rules?: ReviewRule[];
 }
 
 /** Team 1's data and the P03 layer, changed together by every action. */
@@ -247,7 +264,7 @@ export function reconcile(c: Combined): Combined {
   }
   const events = c.p03.events.filter((e) => !!records[e.opportunity_id]);
   if (events.length !== c.p03.events.length) changed = true;
-  return changed ? { ipp: c.ipp, p03: { records, events } } : c;
+  return changed ? { ipp: c.ipp, p03: { ...c.p03, records, events } } : c;
 }
 
 export function recordFor(c: Combined, opportunityId: string): P03Record {
@@ -346,11 +363,20 @@ export const closedListings = (c: Combined) =>
     (i) => i.record.listing_status === "Closed" || i.record.listing_status === "Withdrawn",
   );
 
-/** The latest reason the coordinator gave for asking for changes. */
+export const declinedListings = (c: Combined) =>
+  reviewItems(c)
+    .filter((i) => i.record.review_status === "Declined")
+    .sort(oldestFirst);
+
+/** The latest reason the coordinator gave for asking for changes or declining. */
 export function latestChangeRequest(c: Combined, opportunityId: string): P03Event | undefined {
   return [...reconcile(c).p03.events]
     .reverse()
-    .find((e) => e.opportunity_id === opportunityId && e.type === "Changes Requested");
+    .find(
+      (e) =>
+        e.opportunity_id === opportunityId &&
+        (e.type === "Changes Requested" || e.type === "Declined"),
+    );
 }
 
 export function eventsFor(c: Combined, opportunityId: string): P03Event[] {
@@ -405,6 +431,8 @@ export function versionChanges(
 export interface ActionOptions {
   now?: Date;
   reviewer?: string;
+  /** Set when the reason started from the AI reviewer's draft; recorded on the event. */
+  ai_assisted?: boolean;
 }
 const when = (o?: ActionOptions) => (o?.now ?? new Date()).toISOString();
 
@@ -450,8 +478,53 @@ export function requestChanges(
     review_id,
     reason: r,
     checklist: rec.ticks,
+    ...(opts?.ai_assisted ? { ai_assisted: true } : {}),
     at: when(opts),
   });
+}
+
+/**
+ * Declines the submission for good, with a reason the employer can see. Use it when no edit would
+ * make the listing acceptable; otherwise request changes. Students never see it: Team 1's status
+ * stays "Pending Review".
+ */
+export function decline(c0: Combined, id: string, reason: string, opts?: ActionOptions): Combined {
+  const c = reconcile(c0);
+  const rec = pendingRecord(c, id);
+  const r = needReason(reason);
+  const review_id = nextReviewId(c.p03.events.map((e) => e.review_id ?? ""));
+  return addEvent(setRecord(c, { ...rec, review_status: "Declined" }), {
+    opportunity_id: id,
+    type: "Declined",
+    actor: opts?.reviewer ?? REVIEWER,
+    version: rec.version,
+    review_id,
+    reason: r,
+    checklist: rec.ticks,
+    ...(opts?.ai_assisted ? { ai_assisted: true } : {}),
+    at: when(opts),
+  });
+}
+
+// ---------- Review rules the AI reviewer reads (the Sprint 2 feedback loop) ----------
+
+export function addRule(c: Combined, text: string, opts?: ActionOptions): Combined {
+  const t = text.replace(/\s+/g, " ").trim();
+  if (t.length < 8) throw new Error("Write the rule as a full sentence.");
+  if (t.length > 300) throw new Error("Keep a rule under 300 characters.");
+  const rules = c.p03.rules ?? [];
+  if (rules.length >= 25) throw new Error("The demo keeps at most 25 rules. Remove one first.");
+  const max = rules.reduce((m, x) => Math.max(m, Number(/(\d+)$/.exec(x.rule_id)?.[1] ?? 0)), 0);
+  const rule_id = `RULE-${String(max + 1).padStart(3, "0")}`;
+  const rule = { rule_id, text: t, added_by: opts?.reviewer ?? REVIEWER, at: when(opts) };
+  return { ...c, p03: { ...c.p03, rules: [...rules, rule] } };
+}
+
+export function removeRule(c: Combined, ruleId: string): Combined {
+  return {
+    ...c,
+    p03: { ...c.p03, rules: (c.p03.rules ?? []).filter((r) => r.rule_id !== ruleId) },
+  };
 }
 
 /** Approves the current version. Locked until all five checks are ticked. Does not publish. */
@@ -474,6 +547,7 @@ export function approve(c0: Combined, id: string, opts?: ActionOptions): Combine
       review_id,
       reason: "All five checks passed.",
       checklist: rec.ticks,
+      ...(opts?.ai_assisted ? { ai_assisted: true } : {}),
       at: when(opts),
     },
   );
