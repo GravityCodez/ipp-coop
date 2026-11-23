@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { GROQ_BACKUP_MODEL, GROQ_MODEL } from "@/lib/ai/chat";
 import {
   buildPrompt,
+  completeReply,
   parseAssistant,
   rulesReply,
   sanitizeFacts,
@@ -110,7 +111,7 @@ export const Route = createFileRoute("/api/p01/assistant")({
           for (const model of [GROQ_MODEL, GROQ_BACKUP_MODEL]) {
             const reply = await callModel(key, model, system, turns, facts.version);
             if (reply === "busy") continue;
-            if (reply) return json(reply);
+            if (reply) return json(completeReply(reply, last.content, facts));
             break;
           }
         }

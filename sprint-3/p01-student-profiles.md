@@ -17,7 +17,7 @@ Sprint goal: handle exceptions and evidence, connect P01 to the class data, and 
 
 | Check | Result |
 | --- | --- |
-| Unit tests (`bun run test`) | 208 of 208 pass, 71 of them for P01 |
+| Unit tests (`bun run test`) | 210 of 210 pass, 73 of them for P01 |
 | Type check and build | Pass |
 | End-to-end run in Chrome (production build) | 48 of 48 pass, no console errors |
 | Class database check | 0 differences in 14 fields for COOP-B001 versions 2 and 3 |
