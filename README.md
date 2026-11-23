@@ -1,6 +1,14 @@
 # IPP – Master: Internship Practicum Platform
 
-> **Snapshot.** This public repository is a one-commit copy of Team 1's IPP app (P01, BUS 2010, Fall 2026), taken on 22 Nov 2026 for the cross-team merge. It is not connected to Lovable or Render: the live app at https://ipp-master.onrender.com still deploys from Team 1's private working repository. People are named by team role here. Fork it, branch it or copy it into the merged repository as needed.
+> **Common repository for all teams (BUS 2010, Fall 2026).** This is the shared IPP app for the cross-team merge, started from Team 1's app (their ipp-share snapshot, history kept) with Team 3's P03 review, publication and Internship Desk added. Live copy: https://coh-ipp-coop-26b134973f81406a.cohesivity.workers.dev (deploy with `node deploy/cohesivity.mjs`, see INTEGRATION.md section 12). Team 1's Render site (https://ipp-master.onrender.com) still deploys from their private repository. People are named by team role here.
+
+## How teams contribute
+
+1. Create a branch named after your team and part, e.g. `team2-employer`.
+2. Keep your changes to your own pages and `src/lib/<your part>/` where you can; note any shared-file edits in the pull request.
+3. Run `npx -y bun@1.4.0 run test` and `npx -y bun@1.4.0 run build` before opening a pull request into `main`.
+4. Never commit keys. Supabase team keys, Groq and Anthropic keys go in environment variables only.
+5. Record what your part adds in INTEGRATION.md (one numbered section per team).
 
 One integrated demonstration app for a university internship practicum: Employer HR submits an opportunity, a University Administrator approves it, a Student applies, and a Faculty Reviewer sees the application and its status. All data is synthetic, role switching is simulated, and records are stored in the browser only.
 
