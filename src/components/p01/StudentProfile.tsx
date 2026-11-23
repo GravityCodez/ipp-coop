@@ -1,8 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle2, Circle, Clock3 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   applyPatch,
   approvals,
@@ -25,6 +22,7 @@ import {
 } from "@/lib/p01";
 import { Assistant } from "./Assistant";
 import { ProfileForm } from "./ProfileForm";
+import { Button, Input, Label } from "./kit";
 import {
   fmt,
   MatchChip,
@@ -114,23 +112,33 @@ function Workspace({ state }: { state: P01State }) {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-4 rounded-2xl bg-panel p-6 text-panel-foreground lg:flex-row lg:items-center lg:justify-between">
-        <div className="min-w-0 space-y-1.5">
-          <p className="text-sm text-panel-muted">Student profile and internship interests</p>
-          <h2 className="text-2xl font-bold text-panel-foreground">
-            {v.full_name}{" "}
-            <span className="font-mono text-sm font-normal text-panel-muted">
-              {v.student_id} · version {v.profile_version}
-            </span>
-          </h2>
-          <p className="flex flex-wrap items-center gap-2 text-sm">
-            <StatusChip status={v.status} />
-            <span className="text-panel-muted">{next}</span>
-          </p>
+      <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-6 shadow-sm lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex min-w-0 items-start gap-4">
+          <span
+            aria-hidden="true"
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-accent text-sm font-bold text-accent-foreground"
+          >
+            {v.full_name
+              .split(" ")
+              .map((w) => w[0])
+              .join("")}
+          </span>
+          <div className="min-w-0 space-y-1.5">
+            <h2 className="text-xl font-bold text-heading">
+              {v.full_name}{" "}
+              <span className="text-sm font-normal text-muted-foreground">
+                {v.student_id} · version {v.profile_version}
+              </span>
+            </h2>
+            <p className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+              <StatusChip status={v.status} />
+              <span>{next}</span>
+            </p>
+          </div>
         </div>
         {(v.status === "reviewed" || v.status === "clarification_requested") && (
           <Button
-            variant="secondary"
+            variant="outline"
             className="shrink-0"
             onClick={() =>
               run(
@@ -145,7 +153,7 @@ function Workspace({ state }: { state: P01State }) {
       </div>
 
       {v.coordinator_comment && v.status !== "reviewed" && (
-        <p className="rounded-2xl bg-warn p-4 text-sm text-warn-foreground">
+        <p className="rounded-xl bg-warn px-4 py-3 text-sm text-warn-foreground">
           <span className="font-semibold">Coordinator asked: </span>
           {v.coordinator_comment}
         </p>
@@ -153,7 +161,7 @@ function Workspace({ state }: { state: P01State }) {
       {message && (
         <p
           role={message.ok ? "status" : "alert"}
-          className={`rounded-2xl p-4 text-sm ${message.ok ? "bg-status text-status-foreground" : "bg-danger text-danger-foreground"}`}
+          className={`rounded-xl px-4 py-3 text-sm ${message.ok ? "bg-status text-status-foreground" : "bg-danger text-danger-foreground"}`}
         >
           {message.text}{" "}
           {stale && (
@@ -186,7 +194,6 @@ function Workspace({ state }: { state: P01State }) {
                 <Label htmlFor="p01-note">What changed in this version</Label>
                 <Input
                   id="p01-note"
-                  className="mt-2"
                   value={note}
                   maxLength={160}
                   placeholder="For example: new dates and a clearer goal"
@@ -245,7 +252,7 @@ function Workspace({ state }: { state: P01State }) {
                     {i + 1}
                   </span>
                   <div className="min-w-0 text-sm">
-                    <p className="font-semibold">{m.title}</p>
+                    <p className="font-bold text-heading">{m.title}</p>
                     <p className="text-muted-foreground">
                       {m.employer} · <span className="font-mono text-xs">{m.opportunity_id}</span>
                     </p>
@@ -303,7 +310,7 @@ function Workspace({ state }: { state: P01State }) {
                       className={`mt-0.5 h-4 w-4 ${a.state === "done" ? "text-primary" : "text-muted-foreground"}`}
                     />
                     <div>
-                      <p className="font-semibold">
+                      <p className="font-semibold text-heading">
                         {a.step}{" "}
                         <span className="font-normal text-muted-foreground">· {a.who}</span>
                       </p>

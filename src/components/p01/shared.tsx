@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { Status } from "@/components/AppShell";
 import { getOpenListings, getSkills } from "@/lib/db";
 import {
   DEMO_DATA,
@@ -35,21 +36,15 @@ export const fmt = (iso: string | null): string => {
 };
 export const now = () => new Date().toISOString();
 
-const TONE: Record<ProfileStatus, string> = {
-  draft: "bg-muted text-foreground",
-  submitted: "bg-sent text-sent-foreground",
-  clarification_requested: "bg-warn text-warn-foreground",
-  reviewed: "bg-status text-status-foreground",
-};
+const TONE = {
+  draft: "gray",
+  submitted: "blue",
+  clarification_requested: "amber",
+  reviewed: "green",
+} as const satisfies Record<ProfileStatus, string>;
 
 export function StatusChip({ status }: { status: ProfileStatus }) {
-  return (
-    <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${TONE[status]}`}
-    >
-      {STATUS_LABEL[status]}
-    </span>
-  );
+  return <Status tone={TONE[status]}>{STATUS_LABEL[status]}</Status>;
 }
 
 export function Panel({
@@ -84,18 +79,16 @@ export function SkillBadge({ skill, name }: { skill: SkillEntry; name: string })
   const reviewed = skill.source === "reviewed";
   return (
     <span className="min-w-0">
-      <span className="block font-medium">
+      <span className="block font-semibold text-heading">
         {name}{" "}
         <span className="font-mono text-xs font-normal text-muted-foreground">
           {skill.skill_id}
         </span>
       </span>
-      <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
-        <span
-          className={`rounded-full px-2 py-0.5 font-semibold ${reviewed ? "bg-status text-status-foreground" : "bg-warn text-warn-foreground"}`}
-        >
+      <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
+        <Status tone={reviewed ? "green" : "amber"}>
           {reviewed ? "Reviewed" : "Self-declared"}
-        </span>
+        </Status>
         {reviewed ? (
           <span>
             {skill.evidence_id} · {skill.reviewer ?? "P06 reviewer"}, {fmt(skill.review_date)}
@@ -207,17 +200,9 @@ export function matchVersion(
     });
 }
 
-const MATCH_TONE = {
-  go: "bg-status text-status-foreground",
-  todo: "bg-warn text-warn-foreground",
-  no: "bg-danger text-danger-foreground",
-} as const;
+const MATCH_TONE = { go: "green", todo: "amber", no: "red" } as const;
 export const MatchChip = ({ row }: { row: MatchRow }) => (
-  <span
-    className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${MATCH_TONE[row.tone]}`}
-  >
-    {row.result}
-  </span>
+  <Status tone={MATCH_TONE[row.tone]}>{row.result}</Status>
 );
 
 /** The binder's demo listing. */
