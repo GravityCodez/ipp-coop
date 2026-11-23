@@ -3,6 +3,7 @@ import { GraduationCap, Menu, RotateCcw, X } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { resetDemo } from "@/lib/ipp-store";
 import { Assistant } from "@/components/p02/Assistant";
+import { resetP01 } from "@/lib/p01";
 import { commit, resetLaunchpad, useLaunchpad, viewForPath, type View } from "@/lib/p02/store";
 
 /*
@@ -17,6 +18,7 @@ type NavItem = { to: string; label: string };
 const NAV: Record<View, NavItem[]> = {
   student: [
     { to: "/profile", label: "Profile" },
+    { to: "/p01/profile", label: "Interests" },
     { to: "/opportunities", label: "Opportunities" },
     { to: "/applications", label: "My Applications" },
     { to: "/desk", label: "Internship Desk" },
@@ -29,6 +31,7 @@ const NAV: Record<View, NavItem[]> = {
   ],
   admin: [
     { to: "/admin", label: "Admin Review" },
+    { to: "/p01/coordinator", label: "Profiles" },
     { to: "/admin/ai-logs", label: "AI Review Log" },
     { to: "/admin/desk", label: "Desk queue" },
     { to: "/p03/shared", label: "Shared queue" },
@@ -73,6 +76,7 @@ export function AppShell({ children, wide = false }: { children: ReactNode; wide
     ) {
       resetDemo();
       resetLaunchpad();
+      resetP01();
     }
   };
 
@@ -121,7 +125,7 @@ export function AppShell({ children, wide = false }: { children: ReactNode; wide
             </span>
           </Link>
 
-          <nav aria-label="Main" className="hidden items-center gap-1 md:flex">
+          <nav aria-label="Main" className="hidden min-w-0 items-center gap-1 overflow-x-auto py-1 lg:flex">
             {NAV[view].map((n) => (
               <Link
                 key={n.to}
@@ -134,8 +138,8 @@ export function AppShell({ children, wide = false }: { children: ReactNode; wide
             ))}
           </nav>
 
-          <div className="ml-auto hidden items-center gap-3 md:flex">
-            <span className="hidden whitespace-nowrap text-xs font-medium uppercase tracking-wider text-muted-foreground lg:inline">
+          <div className="ml-auto hidden shrink-0 items-center gap-3 lg:flex">
+            <span className="hidden whitespace-nowrap text-xs font-medium uppercase tracking-wider text-muted-foreground 2xl:inline">
               View as
             </span>
             {toggle}
@@ -143,7 +147,7 @@ export function AppShell({ children, wide = false }: { children: ReactNode; wide
 
           <button
             type="button"
-            className={`ml-auto rounded-lg border border-border p-2 md:hidden ${focus}`}
+            className={`ml-auto rounded-lg border border-border p-2 lg:hidden ${focus}`}
             aria-expanded={menu}
             aria-controls="mobile-menu"
             onClick={() => setMenu((m) => !m)}
@@ -156,7 +160,7 @@ export function AppShell({ children, wide = false }: { children: ReactNode; wide
         {menu && (
           <div
             id="mobile-menu"
-            className="max-h-[75vh] overflow-y-auto border-t border-border bg-card px-4 py-3 md:hidden"
+            className="max-h-[75vh] overflow-y-auto border-t border-border bg-card px-4 py-3 lg:hidden"
           >
             <div className="mb-3 flex items-center gap-3">
               <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -208,7 +212,8 @@ export function AppShell({ children, wide = false }: { children: ReactNode; wide
           </button>
         </div>
       </footer>
-      <Assistant />
+      {/* The Interests page has its own assistant, which also answers from the FAQ. */}
+      {path !== "/p01/profile" && <Assistant />}
     </div>
   );
 }

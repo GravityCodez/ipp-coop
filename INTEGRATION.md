@@ -195,3 +195,24 @@ Added by Team 5 on 23 Nov 2026.
 
 Source for the external module: https://github.com/TheCYPER/bus2010-p05-opportunity-matcher (guide for teams: `docs/SUPABASE_GUIDE.md`).
 
+## 14. Team 1 (P01) in the common repository
+
+Added by Team 1 on 24 Nov 2026 (Sprint 3).
+
+| Route / file | What it does |
+| --- | --- |
+| `/p01/profile` (Student → Interests) | P01 profile and interests: draft, submit, clarification, revision as a new version, skills with evidence status, matching preview (P05 engine on live listings), version history. The profile assistant explains the profile and proposes changes to a draft. |
+| `/p01/coordinator` (Admin → Profiles) | Review queue with changed fields, request clarification, mark reviewed, accept P06 evidence, hand-off export, questions the assistant could not answer. |
+| `/api/p01/assistant` | Assistant server route. `GROQ_API_KEY` optional; rules answers without it. |
+| `src/lib/p01/` | Rules, contract, store and assistant. Import only from `@/lib/p01`. 70 tests in `src/test/p01-*.test.ts`. |
+
+Hand-offs:
+
+| With | Contract | Status |
+| --- | --- | --- |
+| P05 | `toFeedRow()` gives a `profile_feed` row; P05's `mapProfiles()` reads it unchanged | Connected in the app. On load, the coordinator page compares P01's copies of COOP-B001 versions 2 and 3 with the class database (14 fields each) |
+| P06 | `skill_evidence` fields: evidence, student, skill, activity, outcome, reviewer, date | Declared stand-in for E-JIRA-01 and E-PBI-11. E-SQL-07 and E-PY-02 match the class database |
+| P04 | `currentReviewed()` or `exportVersion()`: the reviewed profile version to attach to an application | Ready; P04 not connected yet |
+| P02 | Launchpad's `/profile` keeps its own short profile for applying | Open: agree whether Launchpad's apply step reads the P01 version |
+
+Shared files changed: `AppShell.tsx` (two nav entries, demo reset, the floating assistant is hidden on `/p01/profile`, desktop navigation from 1024 px so the longer menu fits) and `src/lib/p02/store.ts` (`viewForPath` knows the two P01 pages).
