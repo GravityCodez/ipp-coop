@@ -16,7 +16,7 @@ import {
   type P01State,
   type Term,
 } from "@/lib/p01";
-import { buildPrompt, sanitizeFacts, sanitizeTurns } from "@/lib/p01/assistant";
+import { buildPrompt, completeReply, sanitizeFacts, sanitizeTurns } from "@/lib/p01/assistant";
 
 const VOCAB: Term[] = [
   { skill_id: "SK-JIRA-01", label: "Jira work tracking", synonyms: ["jira"] },
@@ -151,7 +151,8 @@ describe("model output is checked", () => {
     ));
   it("keeps IDs exact when the model writes typographic hyphens", () =>
     expect(
-      ok({ answer: "E\u2011JIRA\u201101 is pending.", kind: "answer", sources: ["Evidence"] })!.answer,
+      ok({ answer: "E\u2011JIRA\u201101 is pending.", kind: "answer", sources: ["Evidence"] })!
+        .answer,
     ).toBe("E-JIRA-01 is pending."));
   it("always uses the fixed handoff text", () =>
     expect(ok({ answer: "It pays well.", kind: "handoff", sources: ["Matching"] })).toMatchObject({
@@ -185,5 +186,28 @@ describe("what reaches the model", () => {
     expect(p).toContain("You cannot review, verify, approve, submit or place");
     expect(p).toContain("E-JIRA-01");
     expect(p).toContain("list every step in FACTS.approvals");
+  });
+});
+
+describe("model answers are completed", () => {
+  const model = (answer: string) =>
+    completeReply(
+      { answer, kind: "answer", sources: [], mode: "ai" },
+      "What still needs a person to approve?",
+      facts(),
+    );
+  it("adds approval steps the model left out, once", () => {
+    const a = model("Profile review is waiting.").answer;
+    expect(a.match(/Profile review/g)).toHaveLength(1);
+    expect(a).toContain("Placement (University, by a named person)");
+    expect(a).toContain("Skill evidence");
+  });
+  it("adds the suggestion note to internship answers only", () => {
+    const say = (answer: string, q = "Which fit me?") =>
+      completeReply({ answer, kind: "answer", sources: ["Matching"], mode: "ai" }, q, facts())
+        .answer;
+    expect(say("Aviation Analytics Intern (OP-028): can apply")).toContain("not a placement");
+    expect(say("OP-028 fits. This is not a placement.").match(/placement/g)).toHaveLength(1);
+    expect(say("Your goal is clear.")).toBe("Your goal is clear.");
   });
 });

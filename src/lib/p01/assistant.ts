@@ -463,6 +463,29 @@ export function parseAssistant(
   return { answer, kind: "answer", sources, mode: "ai", model };
 }
 
+/** Adds what a model answer must not leave out: every open approval step, and the suggestion note. */
+export function completeReply(
+  r: AssistantReply,
+  question: string,
+  f: AssistantFacts,
+): AssistantReply {
+  if (r.kind !== "answer") return r;
+  const lines = [r.answer];
+  if (/\b(approv|decid|person to|human)/i.test(question)) {
+    const low = r.answer.toLowerCase();
+    const left = f.approvals.filter(
+      (a) => a.state !== "done" && !low.includes(a.step.toLowerCase()),
+    );
+    lines.push(...left.map((a) => `• ${a.step} (${a.who}): ${a.detail}`));
+  }
+  const names = f.matches.some(
+    (m) => r.answer.includes(m.opportunity_id) || r.answer.includes(m.title),
+  );
+  if (names && !/not (a )?placement/i.test(r.answer))
+    lines.push("This is a suggestion, not a placement.");
+  return lines.length > 1 ? { ...r, answer: lines.join("\n") } : r;
+}
+
 export function sanitizeTurns(input: unknown): AssistantTurn[] {
   if (!Array.isArray(input)) return [];
   return input
