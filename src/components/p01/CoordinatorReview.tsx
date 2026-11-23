@@ -1,8 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { getProfileFeed } from "@/lib/db";
 import {
   acceptEvidence,
@@ -23,6 +19,8 @@ import {
   type EvidenceItem,
   type P01State,
 } from "@/lib/p01";
+import { Status } from "@/components/AppShell";
+import { Button, Input, Label, Textarea } from "./kit";
 import {
   fmt,
   MatchChip,
@@ -41,11 +39,17 @@ export function CoordinatorReview() {
   return state ? <Workspace state={state} /> : <p role="status">Loading the review queue…</p>;
 }
 
-const OUTCOME_TONE: Record<EvidenceItem["review_outcome"], string> = {
-  pending: "bg-sent text-sent-foreground",
-  revision_requested: "bg-warn text-warn-foreground",
-  demonstrated: "bg-status text-status-foreground",
-  not_demonstrated: "bg-danger text-danger-foreground",
+const OUTCOME_TONE = {
+  pending: "blue",
+  revision_requested: "amber",
+  demonstrated: "green",
+  not_demonstrated: "red",
+} as const satisfies Record<EvidenceItem["review_outcome"], string>;
+const OUTCOME_LABEL: Record<EvidenceItem["review_outcome"], string> = {
+  pending: "Pending",
+  revision_requested: "Revision requested",
+  demonstrated: "Demonstrated",
+  not_demonstrated: "Not demonstrated",
 };
 
 type Check = { state: "loading" } | { state: "ok" | "diff"; text: string } | { state: "offline" };
@@ -113,7 +117,7 @@ function Workspace({ state }: { state: P01State }) {
     message?.where === where ? (
       <p
         role={message.ok ? "status" : "alert"}
-        className={`mt-3 rounded-2xl p-3 text-sm ${message.ok ? "bg-status text-status-foreground" : "bg-danger text-danger-foreground"}`}
+        className={`mt-3 rounded-xl px-4 py-3 text-sm ${message.ok ? "bg-status text-status-foreground" : "bg-danger text-danger-foreground"}`}
       >
         {message.text}
       </p>
@@ -146,7 +150,9 @@ function Workspace({ state }: { state: P01State }) {
           <StatusChip status={v.status} />
         </div>
         {v.change_note && (
-          <p className="mt-1 text-sm text-muted-foreground">{v.status === "reviewed" ? "Note" : "Student’s note"}: {v.change_note}</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {v.status === "reviewed" ? "Note" : "Student’s note"}: {v.change_note}
+          </p>
         )}
         {v.status === "draft" ? (
           <p className="mt-3 text-sm">
@@ -154,34 +160,34 @@ function Workspace({ state }: { state: P01State }) {
           </p>
         ) : (
           <>
-            <div className="mt-4 overflow-x-auto">
+            <div className="mt-4 overflow-x-auto rounded-xl border border-border">
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-border text-muted-foreground">
+                <thead className="border-b border-border bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
                   <tr>
-                    <th scope="col" className="py-2 pr-3 font-medium">
+                    <th scope="col" className="px-4 py-3 font-semibold">
                       Changed field
                     </th>
-                    <th scope="col" className="py-2 pr-3 font-medium">
+                    <th scope="col" className="px-4 py-3 font-semibold">
                       {previous ? `Version ${previous.profile_version}` : "Before"}
                     </th>
-                    <th scope="col" className="py-2 font-medium">
+                    <th scope="col" className="px-4 py-3 font-semibold">
                       Version {v.profile_version}
                     </th>
                   </tr>
                 </thead>
                 <tbody>
                   {changes.map((c) => (
-                    <tr key={c.field} className="border-b border-border align-top">
-                      <th scope="row" className="py-2 pr-3 font-medium">
+                    <tr key={c.field} className="border-b border-border align-top last:border-b-0">
+                      <th scope="row" className="px-4 py-3 font-semibold">
                         {c.field}
                       </th>
-                      <td className="py-2 pr-3 text-muted-foreground">{c.before}</td>
-                      <td className="py-2">{c.after}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{c.before}</td>
+                      <td className="px-4 py-3">{c.after}</td>
                     </tr>
                   ))}
                   {!changes.length && (
                     <tr>
-                      <td colSpan={3} className="py-3 text-muted-foreground">
+                      <td colSpan={3} className="px-4 py-3 text-muted-foreground">
                         No field changed since the last version.
                       </td>
                     </tr>
@@ -195,7 +201,6 @@ function Workspace({ state }: { state: P01State }) {
                 <Textarea
                   id="p01-comment"
                   rows={2}
-                  className="mt-2"
                   value={comment}
                   maxLength={300}
                   placeholder="For example: which airline question do you want to answer, and from which date?"
@@ -253,7 +258,7 @@ function Workspace({ state }: { state: P01State }) {
               className="flex flex-col gap-3 py-3 lg:flex-row lg:items-center lg:justify-between"
             >
               <div className="min-w-0 text-sm">
-                <p className="font-semibold">
+                <p className="font-semibold text-heading">
                   {label(e.skill_id)}{" "}
                   <span className="font-mono text-xs font-normal text-muted-foreground">
                     {e.evidence_id} · {e.student_id}
@@ -261,11 +266,9 @@ function Workspace({ state }: { state: P01State }) {
                 </p>
                 <p className="text-muted-foreground">{e.activity}</p>
                 <p className="mt-1 flex flex-wrap items-center gap-2 text-xs">
-                  <span
-                    className={`rounded-full px-2 py-0.5 font-semibold capitalize ${OUTCOME_TONE[e.review_outcome]}`}
-                  >
-                    {e.review_outcome.replace("_", " ")}
-                  </span>
+                  <Status tone={OUTCOME_TONE[e.review_outcome]}>
+                    {OUTCOME_LABEL[e.review_outcome]}
+                  </Status>
                   <span className="text-muted-foreground">
                     {e.reviewer ? `${e.reviewer}, ${fmt(e.reviewed_at)}` : "not reviewed yet"}
                     {e.accepted_in !== null ? ` · on profile version ${e.accepted_in}` : ""}
@@ -345,7 +348,7 @@ function Workspace({ state }: { state: P01State }) {
       <div className="grid gap-5 lg:grid-cols-2">
         <Panel title="Hand-off to matching and applications" note={`Contract ${CONTRACT_VERSION}`}>
           <p
-            className={`rounded-2xl p-3 text-sm ${check.state === "ok" ? "bg-status text-status-foreground" : check.state === "diff" ? "bg-warn text-warn-foreground" : "bg-muted"}`}
+            className={`rounded-xl px-4 py-3 text-sm ${check.state === "ok" ? "bg-status text-status-foreground" : check.state === "diff" ? "bg-warn text-warn-foreground" : "bg-muted"}`}
           >
             {check.state === "loading"
               ? "Checking the class database…"
@@ -394,7 +397,7 @@ function Workspace({ state }: { state: P01State }) {
               <pre
                 tabIndex={0}
                 aria-label="Profile export"
-                className="mt-2 max-h-64 overflow-auto rounded-2xl bg-muted p-3 font-mono text-xs"
+                className="mt-2 max-h-64 overflow-auto rounded-xl bg-muted p-3 font-mono text-xs"
               >
                 {JSON.stringify(handoff, null, 2)}
               </pre>

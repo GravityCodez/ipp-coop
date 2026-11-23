@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { Bot, Send } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Send } from "lucide-react";
+import { AiBadge } from "@/components/p02/ui";
 import {
   askPerson,
   describePatch,
@@ -13,6 +12,7 @@ import {
   type ProfilePatch,
   type Term,
 } from "@/lib/p01";
+import { Button, Input } from "./kit";
 import { now } from "./shared";
 
 interface Turn {
@@ -85,17 +85,14 @@ export function Assistant({
       className="flex h-[30rem] min-h-0 flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm"
     >
       <header className="border-b border-border px-5 py-3.5">
-        <h2 className="flex items-center gap-2 text-lg font-bold text-heading">
-          <Bot aria-hidden="true" className="h-5 w-5 text-primary" />
-          Profile assistant
-        </h2>
+        <h2 className="text-base font-bold text-heading">Profile assistant</h2>
         <p className="text-xs text-muted-foreground">
           Knows your profile and the approved FAQ. It proposes changes; you apply them, and people
           review.
         </p>
       </header>
       <div ref={log} className="flex-1 space-y-3 overflow-y-auto p-4" aria-live="polite">
-        <div className="rounded-2xl bg-muted p-3 text-sm">
+        <div className="rounded-xl bg-muted px-3 py-2 text-sm">
           Hi {facts.student.split(" ")[0]}! Ask me about version {facts.version}, or tell me what to
           change, for example “I’m free from 1 February to 30 June 2027 and I also know Tableau”.
         </div>
@@ -106,7 +103,7 @@ export function Assistant({
                 key={s}
                 type="button"
                 onClick={() => void ask(s)}
-                className="rounded-full border border-border bg-card px-3 py-1.5 text-left text-xs hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="rounded-full border border-border px-2.5 py-1 text-left text-xs hover:bg-muted"
               >
                 {s}
               </button>
@@ -116,7 +113,7 @@ export function Assistant({
         {turns.map((t, i) => (
           <div key={i} className={t.role === "user" ? "flex justify-end" : "flex justify-start"}>
             <div
-              className={`max-w-[90%] whitespace-pre-line break-words rounded-2xl p-3 text-sm ${t.role === "user" ? "bg-primary text-primary-foreground" : "border border-border"}`}
+              className={`max-w-[90%] whitespace-pre-line break-words rounded-xl px-3 py-2 text-sm ${t.role === "user" ? "bg-primary text-primary-foreground" : "border border-border"}`}
             >
               {t.content}
               {t.reply?.patch && (
@@ -164,20 +161,16 @@ export function Assistant({
                   </Button>
                 ))}
               {t.reply && (
-                <p className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
+                <p className="mt-2 flex flex-wrap items-center gap-1.5">
                   {t.reply.sources.map((s) => (
                     <span
                       key={s}
-                      className="rounded-full bg-status px-2 py-0.5 font-medium text-status-foreground"
+                      className="rounded-md bg-chip px-2 py-0.5 text-[11px] font-medium text-chip-foreground"
                     >
                       {s}
                     </span>
                   ))}
-                  <span>
-                    {t.reply.mode === "ai"
-                      ? `AI answer (${t.reply.model})`
-                      : "Rules answer (AI offline)"}
-                  </span>
+                  <AiBadge model={t.reply.mode === "ai"} />
                 </p>
               )}
             </div>

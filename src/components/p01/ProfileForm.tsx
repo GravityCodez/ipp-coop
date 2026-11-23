@@ -1,5 +1,6 @@
 import { useId, useState, type KeyboardEvent, type ReactNode } from "react";
-import { Plus, X } from "lucide-react";
+import { X } from "lucide-react";
+import { focus } from "@/components/p02/ui";
 import { suggestSkillsLive, type SkillSuggestion } from "@/lib/db";
 import {
   addSkills,
@@ -10,15 +11,12 @@ import {
   type ProfileContent,
   type Term,
 } from "@/lib/p01";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Button, Input, Label, Textarea, labelCls } from "./kit";
 import { SkillBadge, skillName } from "./shared";
 
 const FieldError = ({ id, text }: { id: string; text: string | undefined }) =>
   text ? (
-    <p id={id} className="mt-1 text-sm text-destructive">
+    <p id={id} className="mt-1 text-xs text-destructive">
       {text}
     </p>
   ) : null;
@@ -54,51 +52,43 @@ function Chips({
   return (
     <div>
       <Label htmlFor={id}>{label}</Label>
-      <div className="mt-2 flex flex-wrap gap-1.5">
+      <div
+        className={`flex min-h-11 flex-wrap items-center gap-1.5 rounded-lg border px-2 py-1.5 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ring ${error ? "border-destructive" : "border-input"} ${disabled ? "bg-muted" : "bg-card"}`}
+      >
         {values.map((v) => (
           <span
             key={v}
-            className="inline-flex items-center gap-1 rounded-full bg-accent px-3 py-1 text-sm text-accent-foreground"
+            className="inline-flex items-center gap-1 rounded-md bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground"
           >
             {v}
             {!disabled && (
               <button
                 type="button"
                 aria-label={`Remove ${v}`}
-                className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className={`rounded ${focus}`}
                 onClick={() => onChange(values.filter((x) => x !== v))}
               >
-                <X aria-hidden="true" className="h-3.5 w-3.5" />
+                <X aria-hidden="true" className="h-3 w-3" />
               </button>
             )}
           </span>
         ))}
-        {!values.length && disabled && <span className="text-sm text-muted-foreground">none</span>}
-      </div>
-      {!disabled && (
-        <div className="mt-2 flex gap-2">
-          <Input
+        {!disabled && (
+          <input
             id={id}
             value={text}
-            placeholder={hint}
+            placeholder={values.length ? "Add another" : hint}
             autoComplete="off"
+            className="min-w-24 flex-1 bg-transparent px-1 py-1 text-sm outline-none placeholder:text-muted-foreground/70"
             onChange={(e) => setText(e.target.value)}
             onKeyDown={onKey}
             onBlur={add}
             aria-invalid={!!error}
             aria-describedby={error ? `${id}-error` : undefined}
           />
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            aria-label={`Add to ${label.toLowerCase()}`}
-            onClick={add}
-          >
-            <Plus aria-hidden="true" className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
+        )}
+        {!values.length && disabled && <span className="text-sm text-muted-foreground">none</span>}
+      </div>
       <FieldError id={`${id}-error`} text={error} />
     </div>
   );
@@ -152,7 +142,7 @@ function Skills({
   return (
     <div>
       <Label htmlFor={id}>Skills</Label>
-      <ul className="mt-2 divide-y divide-border rounded-2xl border border-border">
+      <ul className="divide-y divide-border rounded-xl border border-border">
         {value.skills.map((s) => (
           <li
             key={s.skill_id}
@@ -249,7 +239,7 @@ function Skills({
                 <button
                   key={s.skill_id}
                   type="button"
-                  className="mr-1 rounded-full border border-border bg-card px-2.5 py-0.5 text-sm font-medium hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="mr-1 rounded-full border border-border px-2.5 py-1 text-xs hover:bg-muted"
                   onClick={() => use(s, hints.phrase)}
                 >
                   {s.label} ({Math.round(s.similarity * 100)}%)
@@ -292,7 +282,6 @@ export function ProfileForm({
         <Textarea
           id="p01-goals"
           rows={3}
-          className="mt-2"
           value={value.goals}
           disabled={disabled}
           maxLength={GOALS_MAX + 50}
@@ -330,8 +319,8 @@ export function ProfileForm({
           onChange={(v) => set("locations", v)}
         />
         <fieldset>
-          <legend className="text-sm font-medium">Ways of working</legend>
-          <div className="mt-2 flex flex-wrap gap-4 pt-1.5">
+          <legend className={labelCls}>Ways of working</legend>
+          <div className="flex min-h-11 flex-wrap items-center gap-4">
             {ARRANGEMENTS.map((a) => (
               <label key={a} className="flex items-center gap-2 text-sm">
                 <input
@@ -367,7 +356,6 @@ export function ProfileForm({
             <Input
               id={`p01-${k}`}
               type="date"
-              className="mt-2"
               value={value[k] ?? ""}
               disabled={disabled}
               onChange={(e) => set(k, e.target.value || null)}
