@@ -148,7 +148,9 @@ export function AppShell({ children, wide = false }: { children: ReactNode; wide
           </nav>
 
           <div className="ml-auto hidden shrink-0 items-center gap-3 lg:flex">
-            <span className="hidden whitespace-nowrap text-xs font-medium uppercase tracking-wider text-muted-foreground 2xl:inline">
+            <span
+              className={`hidden whitespace-nowrap text-xs font-medium uppercase tracking-wider text-muted-foreground ${view === "admin" ? "" : "xl:inline"}`}
+            >
               View as
             </span>
             {toggle}
