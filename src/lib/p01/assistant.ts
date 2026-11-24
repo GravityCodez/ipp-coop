@@ -444,7 +444,13 @@ export function completeReply(
   r: AssistantReply,
   question: string,
   f: AssistantFacts,
+  vocab: readonly Term[] = [],
 ): AssistantReply {
+  // Before a person is asked, use the answer the page already has.
+  if (r.kind === "handoff") {
+    const own = rulesReply(question, f, vocab);
+    return own.kind === "answer" ? own : r;
+  }
   // A model may say a change is done; nothing is done until the student applies it.
   if (r.kind === "proposal") return { ...r, answer: proposalText(f) };
   if (r.kind !== "answer") return r;

@@ -111,7 +111,7 @@ export const Route = createFileRoute("/api/p01/assistant")({
           for (const model of [GROQ_MODEL, GROQ_BACKUP_MODEL]) {
             const reply = await callModel(key, model, system, turns, facts.version);
             if (reply === "busy") continue;
-            if (reply) return json(completeReply(reply, last.content, facts));
+            if (reply) return json(completeReply(reply, last.content, facts, vocab));
             break;
           }
         }
