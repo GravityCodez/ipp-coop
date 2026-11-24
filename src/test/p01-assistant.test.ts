@@ -194,6 +194,17 @@ describe("model answers are completed", () => {
     expect(a).toContain("Listings, applications and placement");
     expect(a).toContain("Skill evidence");
   });
+  it("answers from the page before asking a person", () => {
+    const hand = (q: string) =>
+      completeReply(
+        { answer: HANDOFF, kind: "handoff", sources: [], mode: "ai" },
+        q,
+        facts(),
+        VOCAB,
+      );
+    expect(hand("Which internships fit me?").answer).toBe(ELSEWHERE);
+    expect(hand("How much will Emirates pay me?").kind).toBe("handoff");
+  });
   it("never says a proposed change is done", () => {
     const r = completeReply(
       {
