@@ -232,8 +232,7 @@ export function AppShell({ children, wide = false }: { children: ReactNode; wide
           </button>
         </div>
       </footer>
-      {/* The P01 profile page has its own help chat, which also answers from the FAQ. */}
-      {path !== "/p01/profile" && <Assistant />}
+      <Assistant />
     </div>
   );
 }

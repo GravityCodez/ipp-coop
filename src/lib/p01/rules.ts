@@ -609,7 +609,6 @@ export interface Approval {
 /** What is still decided by a person, and by whom. Nothing in the app or the assistant decides these. */
 export function approvals(s: P01State): Approval[] {
   const v = latest(s);
-  const reviewed = currentReviewed(s);
   const open = v.skills.filter((x) => x.source === "self_declared").length;
   return [
     {
@@ -634,24 +633,10 @@ export function approvals(s: P01State): Approval[] {
         : "Every skill has reviewed evidence.",
     },
     {
-      step: "Opportunity listing",
-      who: "University staff (P03)",
-      state: "done",
-      detail: "You only see listings that staff approved.",
-    },
-    {
-      step: "Application and offer",
-      who: "Co-op office and employer (P04)",
+      step: "Listings, applications and placement",
+      who: "People in the other teams' parts",
       state: "later",
-      detail: reviewed
-        ? `Uses profile version ${reviewed.profile_version}.`
-        : "Uses your profile once it is reviewed.",
-    },
-    {
-      step: "Placement",
-      who: "University, by a named person",
-      state: "later",
-      detail: "Not placed. A recommendation is never a placement.",
+      detail: "Decided there by people. Your profile never decides them.",
     },
   ];
 }

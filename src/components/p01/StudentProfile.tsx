@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
 import { CheckCircle2, Circle, Clock3 } from "lucide-react";
 import {
   applyPatch,
@@ -23,17 +24,7 @@ import {
 import { Assistant } from "./Assistant";
 import { ProfileForm } from "./ProfileForm";
 import { Button, Input, Label } from "./kit";
-import {
-  fmt,
-  MatchChip,
-  matchVersion,
-  now,
-  Panel,
-  StatusChip,
-  THREAD_LISTING,
-  useListings,
-  useVocabulary,
-} from "./shared";
+import { fmt, now, Panel, StatusChip, useVocabulary } from "./shared";
 
 export function StudentProfile() {
   const state = useP01();
@@ -52,7 +43,6 @@ function Workspace({ state }: { state: P01State }) {
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const dirty = useRef(false);
   const { vocab, live: vocabLive } = useVocabulary();
-  const { listings, live } = useListings();
 
   // A new version or status replaces the form, unless the student has unsaved edits: then the version rule
   // refuses the save and says why.
@@ -66,12 +56,7 @@ function Workspace({ state }: { state: P01State }) {
 
   const editable = v.status === "draft";
   const reviewed = currentReviewed(state);
-  const matches = useMemo(
-    () => matchVersion({ ...v, ...form }, listings, vocab),
-    [v, form, listings, vocab],
-  );
-  const thread = matches.find((m) => m.opportunity_id === THREAD_LISTING);
-  const facts = buildFacts(state, form, vocab, matches.slice(0, 3), now().slice(0, 10));
+  const facts = buildFacts(state, form, vocab, now().slice(0, 10));
 
   const change = (c: ProfileContent) => {
     dirty.current = true;
@@ -226,52 +211,19 @@ function Workspace({ state }: { state: P01State }) {
             )}
           </Panel>
 
-          <Panel
-            title="What matching sees"
-            note={
-              live
-                ? `P05 rules engine, ${listings.length} open listings from the class database`
-                : "P05 rules engine, demo listings"
-            }
-          >
-            <p className="mb-3 text-sm text-muted-foreground">
-              {editable
-                ? `Preview of draft version ${v.profile_version}. `
-                : `Result for version ${v.profile_version}. `}
+          <Panel title="Where your profile goes">
+            <p className="text-sm">
               {reviewed
-                ? `Other teams use reviewed version ${reviewed.profile_version}.`
-                : "No version has been reviewed yet, so other teams still use the shared database's copy."}
+                ? `Version ${reviewed.profile_version} is your newest reviewed version, so it is the one ready to hand over. `
+                : "No version has been reviewed yet, so nothing is ready to hand over. "}
+              Drafts and evidence that is still waiting for review stay here.
             </p>
-            <ol>
-              {matches.slice(0, 3).map((m, i) => (
-                <li
-                  key={m.opportunity_id}
-                  className="grid grid-cols-[2rem_minmax(0,1fr)] gap-x-3 border-t border-border py-3 sm:grid-cols-[2rem_minmax(0,1fr)_auto]"
-                >
-                  <span aria-hidden="true" className="text-2xl font-extrabold text-primary">
-                    {i + 1}
-                  </span>
-                  <div className="min-w-0 text-sm">
-                    <p className="font-bold text-heading">{m.title}</p>
-                    <p className="text-muted-foreground">
-                      {m.employer} · <span className="font-mono text-xs">{m.opportunity_id}</span>
-                    </p>
-                    <p className="mt-1">{m.why}</p>
-                  </div>
-                  <span className="col-start-2 mt-2 sm:col-start-3 sm:mt-0">
-                    <MatchChip row={m} />
-                  </span>
-                </li>
-              ))}
-            </ol>
-            {thread && !matches.slice(0, 3).includes(thread) && (
-              <p className="border-t border-border pt-3 text-sm">
-                {thread.title} <span className="font-mono text-xs">{thread.opportunity_id}</span>:{" "}
-                <MatchChip row={thread} />
-              </p>
-            )}
-            <p className="border-t border-border pt-3 text-xs text-muted-foreground">
-              A match is a suggestion, not a placement. People approve applications and placements.
+            <p className="mt-2 text-sm text-muted-foreground">
+              Recommendations and applications are in{" "}
+              <Link to="/opportunities" className="font-semibold text-primary hover:underline">
+                Opportunities
+              </Link>
+              .
             </p>
           </Panel>
 
