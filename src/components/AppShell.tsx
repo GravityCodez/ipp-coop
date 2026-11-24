@@ -134,7 +134,10 @@ export function AppShell({ children, wide = false }: { children: ReactNode; wide
             </span>
           </Link>
 
-          <nav aria-label="Main" className="hidden min-w-0 items-center gap-1 overflow-x-auto py-1 lg:flex">
+          <nav
+            aria-label="Main"
+            className="hidden min-w-0 items-center gap-1 overflow-x-auto py-1 lg:flex"
+          >
             {NAV[view].map((n) => (
               <Link
                 key={n.to}
@@ -234,8 +237,7 @@ export function AppShell({ children, wide = false }: { children: ReactNode; wide
           </button>
         </div>
       </footer>
-      {/* The Interests page has its own assistant, which also answers from the FAQ. */}
-      {path !== "/p01/profile" && <Assistant />}
+      <Assistant />
     </div>
   );
 }

@@ -21,18 +21,7 @@ import {
 } from "@/lib/p01";
 import { Status } from "@/components/AppShell";
 import { Button, Input, Label, Textarea } from "./kit";
-import {
-  fmt,
-  MatchChip,
-  matchVersion,
-  now,
-  Panel,
-  skillName,
-  StatusChip,
-  THREAD_LISTING,
-  useListings,
-  useVocabulary,
-} from "./shared";
+import { fmt, now, Panel, skillName, StatusChip, useVocabulary } from "./shared";
 
 export function CoordinatorReview() {
   const state = useP01();
@@ -90,7 +79,6 @@ function useSharedCheck(studentId: string): Check {
 function Workspace({ state }: { state: P01State }) {
   const v = latest(state);
   const { vocab } = useVocabulary();
-  const { listings, live } = useListings();
   const [comment, setComment] = useState("");
   const [message, setMessage] = useState<{ ok: boolean; text: string; where: string } | null>(null);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -124,19 +112,6 @@ function Workspace({ state }: { state: P01State }) {
     ) : null;
 
   const handoff = reviewed ? exportVersion(state, reviewed.profile_version) : null;
-  const threadBefore = useMemo(() => {
-    const base = state.versions.find((x) => x.profile_version === 3);
-    return base
-      ? matchVersion(base, listings, vocab).find((m) => m.opportunity_id === THREAD_LISTING)
-      : undefined;
-  }, [state.versions, listings, vocab]);
-  const threadNow = useMemo(
-    () =>
-      reviewed
-        ? matchVersion(reviewed, listings, vocab).find((m) => m.opportunity_id === THREAD_LISTING)
-        : undefined,
-    [reviewed, listings, vocab],
-  );
   const pending = v.status === "submitted";
 
   return (
@@ -213,7 +188,7 @@ function Workspace({ state }: { state: P01State }) {
                         run(
                           "review",
                           (s) => markReviewed(s, "coordinator", seen, now()),
-                          `Version ${v.profile_version} is reviewed. P04 and P05 can use it.`,
+                          `Version ${v.profile_version} is reviewed. Other teams can use it.`,
                         )
                       )
                         setComment("");
@@ -297,7 +272,7 @@ function Workspace({ state }: { state: P01State }) {
                           )
                         }
                       >
-                        P06: ask for revision
+                        Test record: revision
                       </Button>
                       <Button
                         variant="outline"
@@ -317,7 +292,7 @@ function Workspace({ state }: { state: P01State }) {
                           )
                         }
                       >
-                        P06: demonstrated
+                        Test record: demonstrated
                       </Button>
                     </>
                   )}
@@ -339,14 +314,14 @@ function Workspace({ state }: { state: P01State }) {
           ))}
         </ul>
         <p className="mt-2 text-xs text-muted-foreground">
-          E-JIRA-01 and E-PBI-11 are declared stand-ins for P06. E-SQL-07 and E-PY-02 are P06’s
-          records in the class database.
+          P06 is not connected yet: E-JIRA-01 and E-PBI-11 are test records. E-SQL-07 and E-PY-02
+          are P06’s own records in the class database.
         </p>
         <Note where="evidence" />
       </Panel>
 
       <div className="grid gap-5 lg:grid-cols-2">
-        <Panel title="Hand-off to matching and applications" note={`Contract ${CONTRACT_VERSION}`}>
+        <Panel title="Hand-off to other teams" note={`Contract ${CONTRACT_VERSION}`}>
           <p
             className={`rounded-xl px-4 py-3 text-sm ${check.state === "ok" ? "bg-status text-status-foreground" : check.state === "diff" ? "bg-warn text-warn-foreground" : "bg-muted"}`}
           >
@@ -356,27 +331,6 @@ function Workspace({ state }: { state: P01State }) {
                 ? "The class database could not be reached, so the check did not run."
                 : check.text}
           </p>
-          {threadBefore && (
-            <dl className="mt-3 space-y-1.5 text-sm">
-              <dt className="font-semibold">
-                {threadBefore.title}{" "}
-                <span className="font-mono text-xs font-normal text-muted-foreground">
-                  {THREAD_LISTING}
-                </span>
-              </dt>
-              <dd className="flex flex-wrap items-center gap-2">
-                Version 3: <MatchChip row={threadBefore} />
-              </dd>
-              {threadNow && reviewed && (
-                <dd className="flex flex-wrap items-center gap-2">
-                  Version {reviewed.profile_version}: <MatchChip row={threadNow} />
-                </dd>
-              )}
-              <dd className="text-xs text-muted-foreground">
-                P05 rules engine, {live ? "live listings" : "demo listings"}. Rerun on each version.
-              </dd>
-            </dl>
-          )}
           {handoff ? (
             <>
               <div className="mt-3 flex items-center justify-between gap-2">
@@ -411,7 +365,7 @@ function Workspace({ state }: { state: P01State }) {
 
         <div className="min-w-0 space-y-5">
           <Panel
-            title="Questions the chatbots could not answer"
+            title="Questions the assistant could not answer"
             note={`${state.questions.filter((q) => q.answer === null).length} open`}
           >
             {state.questions.length === 0 ? (

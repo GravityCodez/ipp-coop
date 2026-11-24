@@ -21,7 +21,7 @@ export type AssistantKind = "answer" | "proposal" | "handoff";
 export interface AssistantReply {
   answer: string;
   kind: AssistantKind;
-  /** Where the answer comes from, e.g. "Profile v3", "Evidence", "FAQ-07", "Matching". */
+  /** Where the answer comes from, e.g. "Profile v3", "Evidence", "FAQ-07". */
   sources: string[];
   patch?: ProfilePatch;
   mode: "ai" | "rules";
@@ -47,29 +47,12 @@ export interface AssistantFacts {
   }[];
   approvals: { step: string; who: string; state: string; detail: string }[];
   reviewed_version: number | null;
-  matches: {
-    rank: number;
-    title: string;
-    employer: string;
-    opportunity_id: string;
-    result: string;
-    why: string;
-  }[];
-}
-
-export interface MatchLine {
-  title: string;
-  employer: string;
-  opportunity_id: string;
-  result: string;
-  why: string;
 }
 
 export function buildFacts(
   s: P01State,
   form: ProfileContent,
   vocab: readonly Term[],
-  matches: MatchLine[],
   today: string,
 ): AssistantFacts {
   const v = latest(s);
@@ -93,18 +76,21 @@ export function buildFacts(
     })),
     approvals: approvals(s),
     reviewed_version: currentReviewed(s)?.profile_version ?? null,
-    matches: matches.slice(0, 3).map((m, i) => ({ rank: i + 1, ...m })),
   };
 }
 
 export const HANDOFF =
   "I don't have an approved answer for that, so I won't guess. I can send your question to the co-op office and a person will answer it.";
 
+/** Recommendations belong to Team 5 and applications to Team 4; this assistant only covers the profile. */
+export const ELSEWHERE =
+  "I only look after your profile. Recommendations and applications are in Opportunities.";
+
 export const STARTERS = [
   "What is missing from my profile?",
   "What still needs a person to approve?",
   "Why is Jira not verified?",
-  "Which internships fit me?",
+  "How do I get a skill reviewed?",
 ];
 
 const MONTHS = [
@@ -312,24 +298,10 @@ export function rulesReply(
     isQuestion &&
     !/how (are|is)|apply/.test(low)
   ) {
-    const lines = f.matches.map(
-      (m) => `${m.rank}. ${m.title}, ${m.employer} (${m.opportunity_id}): ${m.result}. ${m.why}`,
-    );
-    return {
-      ...base,
-      kind: "answer",
-      answer: lines.length
-        ? [
-            `From profile version ${f.version}:`,
-            ...lines,
-            "This is a suggestion, not a placement.",
-          ].join("\n")
-        : "I can't see the listings right now. Open Student, then Recommended.",
-      sources: ["Matching", profileSource(f)],
-    };
+    return { ...base, kind: "answer", answer: ELSEWHERE, sources: [profileSource(f)] };
   }
   if (/\b(status|comment|clarif|coordinator|happening)\b/.test(low) && isQuestion) {
-    const answer = `Version ${f.version}: ${f.status}.${f.coordinator_comment ? ` Coordinator: “${f.coordinator_comment}”` : ""}${f.reviewed_version ? ` Other teams use version ${f.reviewed_version}.` : " No version has been reviewed yet."}`;
+    const answer = `Version ${f.version}: ${f.status}.${f.coordinator_comment ? ` Coordinator: “${f.coordinator_comment}”` : ""}${f.reviewed_version ? ` Version ${f.reviewed_version} is the one ready to hand over.` : " No version has been reviewed yet."}`;
     return { ...base, kind: "answer", answer, sources: [profileSource(f)] };
   }
   const patch = isQuestion ? null : parsePatch(message, vocab, f.profile);
@@ -369,12 +341,12 @@ Rules:
 2. If the student asks to change the profile (skills, dates, goal, sectors, roles, locations, ways of working), reply with kind "proposal" and a "patch". The student applies it; never say it is saved or submitted.
 3. A patch may contain only: goals (string), add_sectors, add_roles, add_locations (string arrays), work_arrangements (from "on-site","hybrid","remote"), available_from, available_to (YYYY-MM-DD), add_skills (string array; use a label from SKILL LIST when one fits, otherwise the student's words). Leave out fields that do not change. When only a month is given, use its first day for available_from and its last day for available_to.
 4. You cannot review, verify, approve, submit or place. A skill is reviewed only after a P06 reviewer records evidence as demonstrated and a coordinator accepts it. Never say the student is eligible, accepted or placed.
-5. For internships, list FACTS.matches in order, each with its title, employer, ID and result, and say it is a suggestion, not a placement.
-   When asked what people still approve or decide, list every step in FACTS.approvals that is not "done", with who decides it. When asked about a placement, or to do something people decide, say what FACTS.approvals says about that step and who decides it.
+5. For internships, recommendations, applications or placement, reply exactly: "${ELSEWHERE}" You only look after the profile.
+   When asked what people still approve or decide, list every step in FACTS.approvals that is not "done", with who decides it. When asked to do something people decide, say who decides it.
    Write IDs exactly as given, with plain hyphens.
 6. Ask one short follow-up question when a request is unclear, for example a change without a value. Use the conversation so far.
 7. Under 110 words, plain text, friendly and direct. Lists as lines starting with "• ".
-8. Reply with JSON only: {"answer": string, "kind": "answer"|"proposal"|"handoff", "sources": string[], "patch"?: object}. sources is a list from: "Profile v${f.version}", "Evidence", "Approvals", "Matching", or FAQ IDs.
+8. Reply with JSON only: {"answer": string, "kind": "answer"|"proposal"|"handoff", "sources": string[], "patch"?: object}. sources is a list from: "Profile v${f.version}", "Evidence", "Approvals", or FAQ IDs.
 
 FACTS:
 ${JSON.stringify(f)}
@@ -454,7 +426,6 @@ export function parseAssistant(
     `Profile v${version}`,
     "Evidence",
     "Approvals",
-    "Matching",
     ...FAQ.map((x) => x.id),
   ]);
   const sources = (list(r["sources"], 6) ?? []).filter((x) => allowed.has(x));
@@ -468,7 +439,7 @@ export function parseAssistant(
   return { answer, kind: "answer", sources, mode: "ai", model };
 }
 
-/** Adds what a model answer must not leave out: every open approval step, and the suggestion note. */
+/** Adds what a model answer must not leave out: every open approval step. */
 export function completeReply(
   r: AssistantReply,
   question: string,
@@ -485,11 +456,6 @@ export function completeReply(
     );
     lines.push(...left.map((a) => `• ${a.step} (${a.who}): ${a.detail}`));
   }
-  const names = f.matches.some(
-    (m) => r.answer.includes(m.opportunity_id) || r.answer.includes(m.title),
-  );
-  if (names && !/not (a )?placement/i.test(r.answer))
-    lines.push("This is a suggestion, not a placement.");
   return lines.length > 1 ? { ...r, answer: lines.join("\n") } : r;
 }
 
@@ -517,7 +483,6 @@ export function sanitizeFacts(input: unknown): AssistantFacts | null {
     !f.profile ||
     !Array.isArray(f.skills) ||
     !Array.isArray(f.approvals) ||
-    !Array.isArray(f.matches) ||
     !Array.isArray(f.missing)
   )
     return null;

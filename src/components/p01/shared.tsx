@@ -1,26 +1,8 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Status } from "@/components/AppShell";
-import { getOpenListings, getSkills } from "@/lib/db";
-import {
-  DEMO_DATA,
-  mapListings,
-  mapProfiles,
-  mapVocabulary,
-  matchStudent,
-  verdict,
-  whyLines,
-  type Listing,
-  type VocabTerm,
-} from "@/lib/p05";
-import {
-  STATUS_LABEL,
-  toFeedRow,
-  type MatchLine,
-  type ProfileStatus,
-  type ProfileVersion,
-  type SkillEntry,
-  type Term,
-} from "@/lib/p01";
+import { getSkills } from "@/lib/db";
+import { DEMO_DATA } from "@/lib/p05";
+import { STATUS_LABEL, type ProfileStatus, type SkillEntry, type Term } from "@/lib/p01";
 
 export const fmt = (iso: string | null): string => {
   if (!iso) return "not given";
@@ -141,69 +123,3 @@ export function useVocabulary(): { vocab: Term[]; live: boolean } {
 
 export const skillName = (vocab: readonly Term[], id: string) =>
   vocab.find((t) => t.skill_id === id)?.label ?? id;
-
-/** Open listings from the shared database (P03), or P05's demo listings. */
-export function useListings(): { listings: Listing[]; live: boolean } {
-  const [state, setState] = useState<{ listings: Listing[]; live: boolean }>({
-    listings: DEMO_DATA.listings,
-    live: false,
-  });
-  useEffect(() => {
-    let on = true;
-    getOpenListings()
-      .then((rows) => {
-        if (on && rows.length) setState({ listings: mapListings(rows), live: true });
-      })
-      .catch(() => {
-        /* keeps the demo listings */
-      });
-    return () => {
-      on = false;
-    };
-  }, []);
-  return state;
-}
-
-export interface MatchRow extends MatchLine {
-  tone: "go" | "todo" | "no";
-}
-
-/** Runs P05's rules engine on one P01 profile version, through the hand-off contract. */
-export function matchVersion(
-  v: ProfileVersion,
-  listings: Listing[],
-  vocab: readonly Term[],
-): MatchRow[] {
-  const row = toFeedRow(
-    v.status === "submitted" || v.status === "reviewed" ? v : { ...v, status: "submitted" },
-  );
-  const terms: VocabTerm[] = mapVocabulary(vocab.map((t) => ({ ...t, category: "" })));
-  const result = matchStudent(
-    { vocabulary: terms, profiles: mapProfiles([row]), listings, evidence: [], ai: null },
-    v.student_id,
-    "rules",
-  );
-  return (result?.records ?? [])
-    .filter((r) => r.status !== "excluded")
-    .map((r) => {
-      const call = verdict(r);
-      return {
-        tone: call.tone,
-        title: r.listing?.title ?? r.opportunity_id,
-        employer: r.listing?.employer ?? "",
-        opportunity_id: r.opportunity_id,
-        result: call.label,
-        why:
-          whyLines(r, terms).slice(0, 2).join(" ") ||
-          "Open to you, but it shares little with your profile.",
-      };
-    });
-}
-
-const MATCH_TONE = { go: "green", todo: "amber", no: "red" } as const;
-export const MatchChip = ({ row }: { row: MatchRow }) => (
-  <Status tone={MATCH_TONE[row.tone]}>{row.result}</Status>
-);
-
-/** The binder's demo listing. */
-export const THREAD_LISTING = "OP-028";

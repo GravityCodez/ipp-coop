@@ -4,6 +4,7 @@ import {
   contentOf,
   describePatch,
   findDates,
+  ELSEWHERE,
   HANDOFF,
   latest,
   makeP01Seed,
@@ -25,17 +26,8 @@ const VOCAB: Term[] = [
   { skill_id: "SK-AVN-01", label: "Aviation operations domain", synonyms: ["aviation", "airline"] },
 ];
 const AT = "2026-11-24T06:00:00.000Z";
-const MATCHES = [
-  {
-    title: "Aviation Analytics Intern",
-    employer: "Emirates Group",
-    opportunity_id: "OP-028",
-    result: "One thing to do",
-    why: "Same sector.",
-  },
-];
 const facts = (s: P01State = makeP01Seed()) =>
-  buildFacts(s, contentOf(latest(s)), VOCAB, MATCHES, "2026-11-24");
+  buildFacts(s, contentOf(latest(s)), VOCAB, "2026-11-24");
 const draftState = () => {
   const s = makeP01Seed();
   const c = requestClarification(
@@ -58,14 +50,14 @@ describe("P01 assistant without a model", () => {
   it("lists what people still approve", () => {
     const r = say("What still needs a person to approve?");
     expect(r.answer).toMatch(/Profile review/);
-    expect(r.answer).toMatch(/Placement/);
+    expect(r.answer).toMatch(/Skill evidence/);
   });
   it("says what is missing", () =>
     expect(say("What is missing from my profile?").answer).toMatch(/Nothing required is missing/));
-  it("suggests internships and says they are not placements", () => {
+  it("leaves recommendations to the other teams' parts", () => {
     const r = say("Which internships fit me?");
-    expect(r.answer).toContain("OP-028");
-    expect(r.answer).toContain("not a placement");
+    expect(r.answer).toBe(ELSEWHERE);
+    expect(r.kind).toBe("answer");
   });
   it("turns a plain sentence into a proposal", () => {
     const r = say("I'm free from 1 February to 30 June 2027 and I also know Tableau", draftState());
@@ -132,7 +124,7 @@ describe("model output is checked", () => {
       ok({
         answer: "Good news, you are eligible for OP-028.",
         kind: "answer",
-        sources: ["Matching"],
+        sources: ["Evidence"],
       }),
     ).toBeNull();
     expect(ok({ answer: "You have been placed.", kind: "answer", sources: [] })).toBeNull();
@@ -155,7 +147,7 @@ describe("model output is checked", () => {
         .answer,
     ).toBe("E-JIRA-01 is pending."));
   it("always uses the fixed handoff text", () =>
-    expect(ok({ answer: "It pays well.", kind: "handoff", sources: ["Matching"] })).toMatchObject({
+    expect(ok({ answer: "It pays well.", kind: "handoff", sources: ["Evidence"] })).toMatchObject({
       answer: HANDOFF,
       sources: [],
     }));
@@ -199,7 +191,7 @@ describe("model answers are completed", () => {
   it("adds approval steps the model left out, once", () => {
     const a = model("Profile review is waiting.").answer;
     expect(a.match(/Profile review/g)).toHaveLength(1);
-    expect(a).toContain("Placement (University, by a named person)");
+    expect(a).toContain("Listings, applications and placement");
     expect(a).toContain("Skill evidence");
   });
   it("never says a proposed change is done", () => {
@@ -217,12 +209,12 @@ describe("model answers are completed", () => {
     expect(r.answer).toContain("Nothing is saved until you do");
     expect(r.patch).toEqual({ add_skills: ["Tableau"] });
   });
-  it("adds the suggestion note to internship answers only", () => {
-    const say = (answer: string, q = "Which fit me?") =>
-      completeReply({ answer, kind: "answer", sources: ["Matching"], mode: "ai" }, q, facts())
-        .answer;
-    expect(say("Aviation Analytics Intern (OP-028): can apply")).toContain("not a placement");
-    expect(say("OP-028 fits. This is not a placement.").match(/placement/g)).toHaveLength(1);
-    expect(say("Your goal is clear.")).toBe("Your goal is clear.");
-  });
+  it("leaves other answers as they are", () =>
+    expect(
+      completeReply(
+        { answer: "Your goal is clear.", kind: "answer", sources: [], mode: "ai" },
+        "Is my goal clear?",
+        facts(),
+      ).answer,
+    ).toBe("Your goal is clear."));
 });

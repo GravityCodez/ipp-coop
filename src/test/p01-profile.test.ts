@@ -452,13 +452,7 @@ describe("skills, changes and open questions", () => {
     ]);
   });
   it("lists what people still decide", () => {
-    expect(approvals(makeP01Seed()).map((a) => a.state)).toEqual([
-      "waiting",
-      "waiting",
-      "done",
-      "later",
-      "later",
-    ]);
+    expect(approvals(makeP01Seed()).map((a) => a.state)).toEqual(["waiting", "waiting", "later"]);
     expect(approvals(reviewed())[0]!.state).toBe("done");
   });
   it("sends unanswered questions to a person once, and only a coordinator answers", () => {

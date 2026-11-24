@@ -19,6 +19,7 @@ export {
   buildFacts,
   describePatch,
   findDates,
+  ELSEWHERE,
   HANDOFF,
   parseAssistant,
   parsePatch,
@@ -28,5 +29,4 @@ export {
   type AssistantFacts,
   type AssistantReply,
   type AssistantTurn,
-  type MatchLine,
 } from "./assistant";
